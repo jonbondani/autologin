@@ -23,8 +23,8 @@
 
 ### Resultado:
 Se crea la app y se muestra la página "Overview". **Anota estos valores**:
-- **Application (client) ID**: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`
-- **Directory (tenant) ID**: `yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy`
+- **Application (client) ID**: `678488cf-7a78-4487-bb96-76f479a4967a`
+- **Directory (tenant) ID**: `909c0d8a-dd01-4fe7-ac8a-f336e540fdfa`
 
 ---
 
