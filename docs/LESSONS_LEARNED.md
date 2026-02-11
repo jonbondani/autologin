@@ -38,6 +38,35 @@ Registro de lecciones aprendidas durante el desarrollo del proyecto.
 
 ---
 
+## Sprint 0 - Configuración (2026-02-10)
+
+### LL-007: Samsung WAF Interactive Displays no soportan Android Enterprise Work Profile
+- **Contexto**: Intentamos enrollar Samsung WAF 65" en Intune con Work Profile
+- **Lección**: Las pantallas interactivas Samsung WAF, aunque ejecutan Android 14 con GMS, NO soportan Work Profile. El error "No se puede añadir un perfil de trabajo a este dispositivo" es definitivo para este tipo de dispositivo.
+- **Impacto**: Se cambió de Intune enrollment a Shared Device Mode via Authenticator. Sin factory reset necesario.
+
+### LL-008: Security Defaults y Conditional Access son mutuamente excluyentes
+- **Contexto**: Al crear una Conditional Access policy, Entra ID bloqueó con "deben deshabilitarse los valores predeterminados de seguridad"
+- **Lección**: No se pueden usar ambos simultáneamente. Hay que desactivar Security Defaults primero y crear Conditional Access policies equivalentes (MFA para todos + bloqueo auth legacy).
+- **Impacto**: Se desactivaron Security Defaults y se crearon CA policies de reemplazo.
+
+### LL-009: Shared Device Mode es la solución correcta para dispositivos compartidos
+- **Contexto**: Las pantallas Samsung WAF son dispositivos compartidos donde múltiples usuarios necesitan hacer login/logout
+- **Lección**: Microsoft tiene Shared Device Mode diseñado exactamente para esto. Se activa via Authenticator con rol Cloud Device Administrator. Proporciona login global + sign-out global (limpia tokens de TODAS las apps). No requiere Intune enrollment.
+- **Impacto**: Simplificó enormemente la arquitectura. No necesitamos factory reset, Intune enrollment, ni Compliance Policies obligatorias.
+
+### LL-010: La opción "Registrar como dispositivo compartido" en Authenticator solo aparece con la app limpia
+- **Contexto**: Se registró el dispositivo en Authenticator sin activar modo compartido
+- **Lección**: La opción de Shared Device Mode en Authenticator aparece SOLO cuando la app está sin cuentas. Si ya hay una cuenta registrada, hay que eliminarla (o reinstalar Authenticator) para ver la opción. También puede requerir que Company Portal esté instalado.
+- **Impacto**: Documentado para futuras configuraciones de dispositivos adicionales.
+
+### LL-011: El rol en español se llama "Administrador de dispositivos en la nube"
+- **Contexto**: Buscábamos "Cloud Device Administrator" en Entra ID en español
+- **Lección**: Los nombres de roles en Entra ID están traducidos. "Cloud Device Administrator" = "Administrador de dispositivos en la nube". No confundir con "Administrador de Cloud App Security" que es un rol diferente.
+- **Impacto**: Documentado para referencia.
+
+---
+
 ## Formato para Nuevas Lecciones
 
 ```

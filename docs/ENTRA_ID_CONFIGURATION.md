@@ -122,8 +122,8 @@ La columna "Status" de todos los permisos debe mostrar un check verde: **"Grante
 
 | Elemento | Valor | Verificado |
 |---|---|---|
-| Application (client) ID | `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx` | [ ] |
-| Directory (tenant) ID | `yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy` | [ ] |
+| Application (client) ID | `678488cf-7a78-4487-bb96-76f479a4967a` | [x] |
+| Directory (tenant) ID | `909c0d8a-dd01-4fe7-ac8a-f336e540fdfa` | [x] |
 | Redirect URI | `msauth://com.autologin.app/<HASH>` | [ ] |
 | Allow public client flows | Yes | [ ] |
 | Platform Android configurada | Si | [ ] |
@@ -173,17 +173,18 @@ Con toda la configuración completa, estos son los valores que necesitas para el
 
 ```json
 {
-  "client_id": "<TU_CLIENT_ID_DEL_PASO_2>",
+  "client_id": "678488cf-7a78-4487-bb96-76f479a4967a",
   "redirect_uri": "msauth://com.autologin.app/<TU_HASH_URL_ENCODED>",
   "broker_redirect_uri_registered": true,
   "authorization_user_agent": "DEFAULT",
   "account_mode": "SINGLE",
+  "shared_device_mode_supported": true,
   "authorities": [
     {
       "type": "AAD",
       "audience": {
         "type": "AzureADMyOrg",
-        "tenant_id": "<TU_TENANT_ID_DEL_PASO_2>"
+        "tenant_id": "909c0d8a-dd01-4fe7-ac8a-f336e540fdfa"
       },
       "default": true
     }

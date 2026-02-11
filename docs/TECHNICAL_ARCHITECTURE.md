@@ -2,7 +2,10 @@
 
 ## Visión General
 
-App MVVM con Clean Architecture, autenticación via MSAL broker, y persistencia local con Room.
+App MVVM con Clean Architecture, autenticación via MSAL broker en **Shared Device Mode**, y persistencia local con Room.
+
+**Dispositivo objetivo**: Samsung WAF Interactive Display (65"), Android 14 API 34, GMS habilitado.
+**Modo de operación**: Dispositivo compartido — múltiples usuarios hacen login/logout secuencialmente.
 
 ---
 
@@ -155,17 +158,18 @@ interface HistoryRepository {
 ### res/raw/auth_config.json
 ```json
 {
-  "client_id": "<CLIENT_ID>",
+  "client_id": "678488cf-7a78-4487-bb96-76f479a4967a",
   "redirect_uri": "msauth://com.autologin.app/<SIGNATURE_HASH>",
   "broker_redirect_uri_registered": true,
   "authorization_user_agent": "DEFAULT",
   "account_mode": "SINGLE",
+  "shared_device_mode_supported": true,
   "authorities": [
     {
       "type": "AAD",
       "audience": {
         "type": "AzureADMyOrg",
-        "tenant_id": "<TENANT_ID>"
+        "tenant_id": "909c0d8a-dd01-4fe7-ac8a-f336e540fdfa"
       },
       "default": true
     }
