@@ -2,8 +2,8 @@ package com.autologin.app.ui.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -25,8 +25,8 @@ import com.autologin.app.ui.login.LoginScreen
 private data class NavItem(val screen: Screen, val icon: ImageVector)
 
 private val navItems = listOf(
-    NavItem(Screen.Login, Icons.Default.Shield),
-    NavItem(Screen.History, Icons.Default.History),
+    NavItem(Screen.Login, Icons.Default.Lock),
+    NavItem(Screen.History, Icons.Default.DateRange),
 )
 
 @Composable
