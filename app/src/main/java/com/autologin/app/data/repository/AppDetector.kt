@@ -11,7 +11,6 @@ class AppDetector @Inject constructor(
 ) {
     private val microsoftApps = mapOf(
         "com.microsoft.teams" to "Microsoft Teams",
-        "com.microsoft.office.outlook" to "Outlook",
         "com.microsoft.skydrive" to "OneDrive",
         "com.microsoft.office.word" to "Word",
         "com.microsoft.office.excel" to "Excel",

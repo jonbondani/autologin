@@ -4,6 +4,18 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <queries>
+        <package android:name="com.microsoft.teams" />
+        <package android:name="com.microsoft.skydrive" />
+        <package android:name="com.microsoft.office.word" />
+        <package android:name="com.microsoft.office.excel" />
+        <package android:name="com.microsoft.office.powerpoint" />
+        <package android:name="com.microsoft.sharepoint" />
+        <package android:name="com.microsoft.todos" />
+        <package android:name="com.azure.authenticator" />
+        <package android:name="com.microsoft.windowsintune.companyportal" />
+    </queries>
+
     <application
         android:name=".AutoLoginApplication"
         android:allowBackup="false"
@@ -32,7 +44,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
                     android:host="com.autologin.app"
-                    android:path="/clcTiR%2FMTRP8avcwB%2B%2B1ZMJfnPk%3D"
+                    android:path="/TDPWfC9supht4/c0hKDPvlzj+O8="
                     android:scheme="msauth" />
             </intent-filter>
         </activity>
