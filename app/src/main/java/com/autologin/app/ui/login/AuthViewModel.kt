@@ -49,6 +49,7 @@ class AuthViewModel @Inject constructor(
     fun signOut() {
         viewModelScope.launch(Dispatchers.IO) {
             authRepository.signOut()
+            appDetector.killMicrosoftApps()
         }
     }
 }
