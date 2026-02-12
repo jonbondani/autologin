@@ -15,10 +15,12 @@ import com.microsoft.identity.client.SignInParameters
 import com.microsoft.identity.client.exception.MsalException
 import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
@@ -39,30 +41,29 @@ class MsalAuthRepository @Inject constructor(
 
     suspend fun initialize() {
         try {
-            val result = suspendCancellableCoroutine { continuation ->
+            val app = suspendCancellableCoroutine { continuation ->
                 PublicClientApplication.createSingleAccountPublicClientApplication(
                     context,
                     R.raw.auth_config,
                     object : com.microsoft.identity.client.IPublicClientApplication.ISingleAccountApplicationCreatedListener {
                         override fun onCreated(application: ISingleAccountPublicClientApplication) {
-                            continuation.resume(Result.success(application))
+                            continuation.resume(application)
                         }
 
                         override fun onError(exception: MsalException) {
                             Log.e("AutoLogin", "MSAL init error: ${exception.message}", exception)
-                            continuation.resume(Result.failure(exception))
+                            continuation.resume(null)
                         }
                     },
                 )
             }
 
-            result.onSuccess { app ->
+            if (app != null) {
                 msalApp = app
                 Log.d("AutoLogin", "MSAL OK. Shared device: ${app.isSharedDevice}")
                 loadExistingAccount()
-            }.onFailure { e ->
-                initError = e.message
-                _authState.value = AuthState.Error("MSAL error: ${e.message}")
+            } else {
+                _authState.value = AuthState.Error("No se pudo inicializar MSAL")
             }
         } catch (e: Exception) {
             Log.e("AutoLogin", "MSAL init exception: ${e.message}", e)
@@ -71,12 +72,13 @@ class MsalAuthRepository @Inject constructor(
         }
     }
 
-    private fun loadExistingAccount() {
+    private suspend fun loadExistingAccount() {
         val app = msalApp ?: return
         try {
-            val accountResult = app.currentAccount
-            val account = accountResult?.currentAccount
-            Log.d("AutoLogin", "loadExistingAccount: account=${account?.username}, priorAccount=${accountResult?.priorAccount?.username}")
+            val account = withContext(Dispatchers.IO) {
+                app.currentAccount?.currentAccount
+            }
+            Log.d("AutoLogin", "loadExistingAccount: account=${account?.username}")
             if (account != null) {
                 _authState.value = AuthState.Authenticated(account.toAccountInfo())
             } else {
@@ -96,7 +98,7 @@ class MsalAuthRepository @Inject constructor(
 
         // Si ya hay cuenta, mostrarla directamente
         try {
-            val existing = app.currentAccount?.currentAccount
+            val existing = withContext(Dispatchers.IO) { app.currentAccount?.currentAccount }
             if (existing != null) {
                 val info = existing.toAccountInfo()
                 Log.d("AutoLogin", "Cuenta ya existente: ${info.email}")
@@ -123,16 +125,6 @@ class MsalAuthRepository @Inject constructor(
 
                     override fun onError(exception: MsalException) {
                         Log.e("AutoLogin", "Sign-in error: ${exception.message}", exception)
-                        // Si falla porque ya hay cuenta, recuperarla
-                        try {
-                            val account = app.currentAccount?.currentAccount
-                            if (account != null) {
-                                val info = account.toAccountInfo()
-                                _authState.value = AuthState.Authenticated(info)
-                                continuation.resume(Result.success(info))
-                                return
-                            }
-                        } catch (_: Exception) {}
                         val msg = exception.message ?: "Error de autenticacion"
                         _authState.value = AuthState.Error(msg)
                         continuation.resume(Result.failure(exception))

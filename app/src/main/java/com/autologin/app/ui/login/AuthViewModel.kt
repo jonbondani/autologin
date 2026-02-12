@@ -8,6 +8,7 @@ import com.autologin.app.data.repository.MsalAuthRepository
 import com.autologin.app.domain.model.AuthState
 import com.autologin.app.domain.model.DetectedApp
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,7 +33,7 @@ class AuthViewModel @Inject constructor(
         get() = authRepository.isSharedDevice
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             authRepository.initialize()
             _detectedApps.value = appDetector.getDetectedApps()
             _brokerInstalled.value = appDetector.isBrokerInstalled()
@@ -40,13 +41,13 @@ class AuthViewModel @Inject constructor(
     }
 
     fun signIn(activity: Activity) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             authRepository.signIn(activity)
         }
     }
 
     fun signOut() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             authRepository.signOut()
         }
     }
