@@ -7,6 +7,7 @@ import com.autologin.app.data.repository.AppDetector
 import com.autologin.app.data.repository.MsalAuthRepository
 import com.autologin.app.domain.model.AuthState
 import com.autologin.app.domain.model.DetectedApp
+import com.autologin.app.domain.repository.HistoryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,6 +20,7 @@ import javax.inject.Inject
 class AuthViewModel @Inject constructor(
     private val authRepository: MsalAuthRepository,
     private val appDetector: AppDetector,
+    private val historyRepository: HistoryRepository,
 ) : ViewModel() {
 
     val authState: StateFlow<AuthState> = authRepository.authState
@@ -42,13 +44,18 @@ class AuthViewModel @Inject constructor(
 
     fun signIn(activity: Activity) {
         viewModelScope.launch(Dispatchers.IO) {
-            authRepository.signIn(activity)
+            val result = authRepository.signIn(activity)
+            result.getOrNull()?.let { account ->
+                historyRepository.recordLogin(account.email, account.name)
+            }
         }
     }
 
     fun signOut() {
         viewModelScope.launch(Dispatchers.IO) {
+            val account = authRepository.getAccount()
             authRepository.signOut()
+            account?.let { historyRepository.recordLogout(it.email, it.name) }
             appDetector.killMicrosoftApps()
         }
     }

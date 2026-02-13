@@ -1,1 +1,11 @@
 .DS_Store
+
+# Gradle
+.gradle/
+build/
+local.properties
+
+# Keystore
+*.keystore
+*.jks
+keystore.properties

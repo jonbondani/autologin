@@ -15,7 +15,7 @@ class AppDetector @Inject constructor(
 ) {
     // Apps con SSO completo (shared device mode aware)
     private val ssoFullApps = mapOf(
-        "com.microsoft.office.officehub" to "Microsoft 365 Copilot",
+        "com.microsoft.office.officehubrow" to "Microsoft 365 Copilot",
         "com.microsoft.teams" to "Microsoft Teams",
         "com.microsoft.emmx" to "Microsoft Edge",
     )
@@ -25,23 +25,22 @@ class AppDetector @Inject constructor(
         "com.microsoft.skydrive" to "OneDrive",
         "com.microsoft.office.word" to "Word",
         "com.microsoft.office.excel" to "Excel",
-        "com.microsoft.office.powerpoint" to "PowerPoint",
+        "com.microsoft.office.onenote" to "OneNote",
         "com.microsoft.sharepoint" to "SharePoint",
         "com.microsoft.todos" to "To Do",
     )
 
     // Apps a limpiar en logout (excluye Authenticator y Company Portal)
     private val appsToClean = listOf(
-        "com.microsoft.office.officehub",
+        "com.microsoft.office.officehubrow",
         "com.microsoft.teams",
         "com.microsoft.emmx",
         "com.microsoft.skydrive",
         "com.microsoft.office.word",
         "com.microsoft.office.excel",
-        "com.microsoft.office.powerpoint",
+        "com.microsoft.office.onenote",
         "com.microsoft.sharepoint",
         "com.microsoft.todos",
-        "com.microsoft.onenote",
     )
 
     fun getDetectedApps(): List<DetectedApp> {
