@@ -1,39 +1,54 @@
-# Arquitectura Técnica - AutoLogin
+# Arquitectura Tecnica - AutoLogin
 
-## Visión General
+## Vision General
 
-App MVVM con Clean Architecture, autenticación via MSAL broker en **Shared Device Mode**, y persistencia local con Room.
+App MVVM con Clean Architecture, autenticacion via MSAL broker en **Shared Device Mode**, y persistencia local con Room.
 
-**Dispositivo objetivo**: Samsung WAF Interactive Display (65"), Android 14 API 34, GMS habilitado.
-**Modo de operación**: Dispositivo compartido — múltiples usuarios hacen login/logout secuencialmente.
+**Dispositivo objetivo**: Samsung WAF Interactive Display 65", Android 14 API 34, GMS habilitado.
+**Modo de operacion**: Dispositivo compartido - multiples usuarios hacen login/logout secuencialmente.
+**Arquitectura de autenticacion**: MSAL Shared Device Mode (NO Intune MDM enrollment).
 
 ---
 
-## Stack Tecnológico
+## Dispositivo
+
+| Parametro | Valor |
+|---|---|
+| Modelo | Samsung WAF Interactive Display 65" |
+| Android | 14 (API 34) |
+| GMS | Habilitado |
+| Work Profile | NO soportado |
+| Intune enrollment | NO compatible |
+| Modo | Shared Device Mode via Authenticator + Company Portal |
+| Autenticacion | Passwordless con Authenticator number matching |
+
+---
+
+## Stack Tecnologico
 
 ```
-┌─────────────────────────────────────────────┐
-│                 UI Layer                     │
-│  Jetpack Compose + Material 3               │
-│  Navigation Compose                         │
-├─────────────────────────────────────────────┤
-│               ViewModel Layer               │
-│  AuthViewModel │ HistoryViewModel           │
-│  StateFlow → Compose State                  │
-├─────────────────────────────────────────────┤
-│              Domain Layer                    │
-│  UseCases: SignIn, SignOut, GetHistory       │
-│  Interfaces: AuthRepository, HistoryRepo    │
-├─────────────────────────────────────────────┤
-│               Data Layer                    │
-│  MsalAuthRepository ← MSAL Android SDK     │
-│  RoomHistoryRepository ← Room Database      │
-│  AppDetector ← PackageManager              │
-├─────────────────────────────────────────────┤
-│              External                        │
-│  MSAL Broker (Authenticator/Company Portal) │
-│  Microsoft Entra ID                         │
-└─────────────────────────────────────────────┘
++---------------------------------------------+
+|                 UI Layer                     |
+|  Jetpack Compose + Material 3               |
+|  Navigation Compose                         |
++---------------------------------------------+
+|               ViewModel Layer               |
+|  AuthViewModel | HistoryViewModel           |
+|  StateFlow -> Compose State                 |
++---------------------------------------------+
+|              Domain Layer                    |
+|  UseCases: SignIn, SignOut, GetHistory       |
+|  Interfaces: AuthRepository, HistoryRepo    |
++---------------------------------------------+
+|               Data Layer                    |
+|  MsalAuthRepository <- MSAL Android SDK     |
+|  RoomHistoryRepository <- Room Database      |
+|  AppDetector <- PackageManager              |
++---------------------------------------------+
+|              External                        |
+|  MSAL Broker (Authenticator/Company Portal) |
+|  Microsoft Entra ID                         |
++---------------------------------------------+
 ```
 
 ---
@@ -159,7 +174,7 @@ interface HistoryRepository {
 ```json
 {
   "client_id": "678488cf-7a78-4487-bb96-76f479a4967a",
-  "redirect_uri": "msauth://com.autologin.app/<SIGNATURE_HASH>",
+  "redirect_uri": "msauth://com.autologin.app/TDPWfC9supht4%2Fc0hKDPvlzj%2BO8%3D",
   "broker_redirect_uri_registered": true,
   "authorization_user_agent": "DEFAULT",
   "account_mode": "SINGLE",
@@ -182,6 +197,7 @@ interface HistoryRepository {
 <manifest>
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
 
     <application
         android:name=".AutoLoginApplication"
@@ -195,7 +211,7 @@ interface HistoryRepository {
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
                     android:host="com.autologin.app"
-                    android:path="/<SIGNATURE_HASH>"
+                    android:path="/TDPWfC9supht4/c0hKDPvlzj+O8="
                     android:scheme="msauth" />
             </intent-filter>
         </activity>
@@ -203,92 +219,187 @@ interface HistoryRepository {
 </manifest>
 ```
 
+> **IMPORTANTE**: `android:path` usa el hash **raw** (con `/`, `+`, `=`). El `redirect_uri` en `auth_config.json` usa la version **URL-encoded** (`%2F`, `%2B`, `%3D`). Mezclar formatos causa que el redirect no funcione.
+
 ---
 
-## Flujo de Autenticación
+## Threading
+
+Todas las llamadas a MSAL deben ejecutarse fuera del hilo principal. Usar `Dispatchers.IO`:
+
+```kotlin
+// CORRECTO
+suspend fun getCurrentAccount(): AccountInfo? = withContext(Dispatchers.IO) {
+    msalApp.getCurrentAccount()?.currentAccount?.let { account ->
+        AccountInfo(id = account.id, name = account.username, email = account.username)
+    }
+}
+
+// INCORRECTO - crashea con IllegalStateException
+fun getCurrentAccount(): AccountInfo? {
+    return msalApp.getCurrentAccount()?.currentAccount?.let { ... }  // Main thread!
+}
+```
+
+Metodos MSAL que requieren `Dispatchers.IO`:
+- `getCurrentAccount()`
+- `signIn()`
+- `signOut()`
+- `acquireTokenSilently()`
+
+---
+
+## Flujo de Autenticacion (Shared Device Mode)
 
 ```
 Usuario pulsa "Login"
-        │
-        ▼
+        |
+        v
 AuthViewModel.signIn()
-        │
-        ▼
-MsalAuthRepository.signIn(activity)
-        │
-        ▼
-ISingleAccountPublicClientApplication.acquireToken(
+        |
+        v
+MsalAuthRepository.signIn(activity)  [Dispatchers.IO]
+        |
+        v
+ISingleAccountPublicClientApplication.signIn(
     activity,
+    loginHint = null,
     scopes = ["User.Read"],
     callback
 )
-        │
-        ▼
-MSAL detecta broker instalado → delega al broker
-        │
-        ▼
-Broker muestra UI de login de Microsoft (WebView/Chrome)
-        │
-        ▼
-Usuario introduce credenciales + MFA (si aplica)
-        │
-        ▼
-Broker recibe tokens de Entra ID → almacena PRT
-        │
-        ▼
-Callback onSuccess → access token + account info
-        │
-        ▼
+        |
+        v
+MSAL detecta broker instalado -> delega al broker
+        |
+        v
+Broker muestra UI de login de Microsoft
+        |
+        v
+Usuario introduce email -> Authenticator number matching (passwordless)
+        |
+        v
+En el telefono movil, Authenticator muestra notificacion con numero
+        |
+        v
+Usuario introduce el numero en la pantalla Samsung WAF
+        |
+        v
+Broker recibe tokens de Entra ID -> almacena PRT -> global sign-in
+        |
+        v
+Callback onSuccess -> access token + account info
+        |
+        v
 HistoryRepository.recordLogin(email, name)
-        │
-        ▼
-AuthState → Authenticated(account)
-        │
-        ▼
+        |
+        v
+AuthState -> Authenticated(account)
+        |
+        v
 UI muestra estado "SSO Activo"
-        │
-        ▼
-Otras apps Microsoft → broker proporciona tokens silenciosamente → SSO
+        |
+        v
+Apps SDM-aware (Teams, Edge, M365 Copilot) -> SSO completo automatico
+Apps no SDM-aware (Word, Excel, OneDrive, PPT, SharePoint, To Do) -> SSO parcial
 ```
+
+> **CRITICO**: Se usa `signIn()` y NO `acquireToken()`. La diferencia es que `signIn()` registra un global sign-in en el broker, propagando SSO a todas las apps. `acquireToken()` solo obtiene un token local para la app que lo llama.
 
 ---
 
 ## Flujo de Logout
 
 ```
-Usuario pulsa "Logout"
-        │
-        ▼
+Usuario pulsa "Cerrar Sesion"
+        |
+        v
 AuthViewModel.signOut()
-        │
-        ▼
-MsalAuthRepository.signOut()
-        │
-        ▼
+        |
+        v
+MsalAuthRepository.signOut()  [Dispatchers.IO]
+        |
+        v
 ISingleAccountPublicClientApplication.signOut(callback)
-        │
-        ▼
-Broker revoca PRT → limpia sesión
-        │
-        ▼
+        |
+        v
+Broker revoca PRT -> limpia sesion global
+        |
+        v
+killBackgroundProcesses() para apps Microsoft:
+  - com.microsoft.teams (Teams)
+  - com.microsoft.emmx (Edge)
+  - com.microsoft.office.officehubrow (M365 Copilot)
+  - com.microsoft.office.word (Word)
+  - com.microsoft.office.excel (Excel)
+  - com.microsoft.skydrive (OneDrive)
+  - com.microsoft.office.powerpoint (PowerPoint)
+  - com.microsoft.sharepoint (SharePoint)
+  - com.microsoft.todos (To Do)
+  - com.microsoft.office.onenote (OneNote)
+        |
+        v
 HistoryRepository.recordLogout(email, name)
-        │
-        ▼
-AuthState → Unauthenticated
-        │
-        ▼
-Otras apps Microsoft → pierden SSO → requerirán re-auth
+        |
+        v
+AuthState -> Unauthenticated
+        |
+        v
+Otras apps Microsoft -> pierden SSO -> requeriran re-auth
 ```
+
+> `killBackgroundProcesses()` solo funciona para apps en background. Cuando el usuario esta en AutoLogin haciendo logout, todas las apps Microsoft estan en background. Requiere el permiso `KILL_BACKGROUND_PROCESSES` en el manifest.
 
 ---
 
-## Detección de Apps Microsoft
+## Compatibilidad SSO
+
+| App | Tipo SSO | Comportamiento |
+|---|---|---|
+| Microsoft 365 Copilot | COMPLETO | Login/logout automatico sin intervencion |
+| Microsoft Teams | COMPLETO | Login/logout automatico sin intervencion |
+| Microsoft Edge | COMPLETO | Login/logout automatico sin intervencion |
+| Microsoft Word | PARCIAL | Email visible, usuario confirma, sin contrasena |
+| Microsoft Excel | PARCIAL | Email visible, usuario confirma, sin contrasena |
+| Microsoft OneDrive | PARCIAL | Email visible, usuario confirma, sin contrasena |
+| Microsoft PowerPoint | PARCIAL | Email visible, usuario confirma, sin contrasena |
+| Microsoft SharePoint | PARCIAL | Email visible, usuario confirma, sin contrasena |
+| Microsoft To Do | PARCIAL | Email visible, usuario confirma, sin contrasena |
+
+**SSO COMPLETO**: La app detecta automaticamente el global sign-in del broker y autentica al usuario sin ninguna intervencion. Son apps "shared device mode aware" que implementan el SDK de SDM.
+
+**SSO PARCIAL**: La app detecta que hay una cuenta disponible via el broker PRT, muestra el email pre-rellenado y permite al usuario confirmar sin introducir contrasena. Son apps que no implementan completamente el SDK de Shared Device Mode.
+
+---
+
+## Autenticacion Passwordless
+
+La cuenta compartida (`pantallas@prestige-expo.com`) utiliza autenticacion passwordless con Microsoft Authenticator number matching:
+
+1. El usuario introduce el email en la pantalla Samsung WAF
+2. Microsoft envia una notificacion push a la app Authenticator en un telefono movil registrado
+3. La pantalla muestra un numero de 2 digitos
+4. El usuario introduce ese numero en Authenticator del telefono movil
+5. La autenticacion se completa
+
+**Requisitos para que funcione**:
+- Security Defaults desactivados en el tenant
+- Microsoft Authenticator en modo "Sin contrasena" habilitado para todos los usuarios
+- La cuenta debe estar registrada en Authenticator del movil como "Cuenta profesional" (icono maletin, NO icono X)
+- El inicio de sesion sin contrasena debe estar habilitado en la configuracion de la cuenta en Authenticator
+
+Esto elimina la necesidad de que los usuarios conozcan o introduzcan contrasenas en las pantallas compartidas.
+
+---
+
+## Deteccion de Apps Microsoft
 
 ```kotlin
 class AppDetector(private val packageManager: PackageManager) {
 
     private val microsoftApps = mapOf(
         "com.microsoft.teams" to "Microsoft Teams",
+        "com.microsoft.emmx" to "Microsoft Edge",
+        "com.microsoft.office.officehubrow" to "Microsoft 365 Copilot",
         "com.microsoft.office.outlook" to "Outlook",
         "com.microsoft.skydrive" to "OneDrive",
         "com.microsoft.office.word" to "Word",
@@ -296,6 +407,7 @@ class AppDetector(private val packageManager: PackageManager) {
         "com.microsoft.office.powerpoint" to "PowerPoint",
         "com.microsoft.sharepoint" to "SharePoint",
         "com.microsoft.todos" to "To Do",
+        "com.microsoft.office.onenote" to "OneNote",
         "com.azure.authenticator" to "Authenticator",
         "com.microsoft.windowsintune.companyportal" to "Company Portal",
     )
@@ -329,39 +441,39 @@ class AppDetector(private val packageManager: PackageManager) {
 
 **Estado: No autenticado**
 - Logo AutoLogin (centrado)
-- Texto: "Inicia sesión para activar SSO en todas tus apps Microsoft"
-- Botón primario: "Iniciar Sesión con Microsoft" (icono M365)
-- Sección inferior: Lista de apps Microsoft detectadas con badges instalado/no instalado
+- Texto: "Inicia sesion para activar SSO en todas tus apps Microsoft"
+- Boton primario: "Iniciar Sesion con Microsoft"
+- Seccion inferior: Lista de apps Microsoft detectadas con badges instalado/no instalado
 
 **Estado: Autenticado**
 - Nombre del usuario + email
 - Badge verde: "SSO Activo"
-- Lista de apps con SSO (solo las instaladas, con check verde)
-- Botón destructivo: "Cerrar Sesión"
-- Texto de advertencia: "Cerrar sesión revocará el SSO en todas las apps"
+- Lista de apps con SSO (solo las instaladas, con indicador de tipo: completo/parcial)
+- Boton destructivo: "Cerrar Sesion"
+- Texto de advertencia: "Cerrar sesion revocara el SSO en todas las apps"
 
 **Estado: Cargando**
 - CircularProgressIndicator centrado
 - Texto: "Autenticando..."
 
 **Estado: Error**
-- Icono de error
+- Icono de advertencia (Warning)
 - Mensaje de error
-- Botón: "Reintentar"
+- Boton: "Reintentar"
 
 ### 2. Pantalla de Historial (HistoryScreen)
 
-- Filtro por rango de fechas (botón con DateRangePicker)
+- Filtro por rango de fechas (boton con DateRangePicker)
 - LazyColumn con items de AuthEvent:
   - Icono: flecha verde (login) o flecha roja (logout)
   - Texto primario: email del usuario
   - Texto secundario: fecha y hora formateada ("9 Feb 2026, 14:32")
 - Empty state: "No hay eventos registrados"
 
-### Navegación
+### Navegacion
 - BottomNavigation con 2 items:
-  - "SSO" (icono: shield/key)
-  - "Historial" (icono: list/clock)
+  - "SSO" (icono: Lock)
+  - "Historial" (icono: DateRange)
 
 ---
 

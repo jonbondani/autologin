@@ -2,63 +2,94 @@
 
 ---
 
-## PR para Fase 0: Documentación y Plan de Proyecto
+## PR Actual: Sprints 0-2 Completados
 
-### Título
-`feat: project documentation, feasibility study, and configuration guides`
+### Titulo
+`feat: autenticacion MSAL con Shared Device Mode, SSO global y passwordless`
 
-### Descripción
+### Descripcion
 
 ## Summary
-- Estudio de viabilidad técnica completo: confirmada la posibilidad de SSO device-wide en Android via MSAL broker + PRT
-- Plan de proyecto con 7 fases detalladas
-- Guías paso a paso de configuración de Microsoft Entra ID e Intune
-- Arquitectura técnica con stack, modelos de datos, y flujos de autenticación
-- Documentación de skills, lessons learned, y tracking de progreso
+- Configuracion completa de Microsoft Entra ID con Shared Device Mode (sin Intune enrollment)
+- App Android funcional con autenticacion MSAL usando `signIn()`/`signOut()` para SSO global
+- SSO verificado en Samsung WAF Interactive Display 65" con Teams, M365 Copilot, Edge
+- Autenticacion passwordless con Authenticator number matching
+- Cierre de sesion global con revocacion de PRT y limpieza de procesos en background
+- Documentacion completa actualizada
 
 ## Cambios incluidos
-- `README.md` — Descripción del proyecto, arquitectura, tech stack, estructura
-- `docs/FEASIBILITY.md` — Análisis de viabilidad con verificación técnica de MSAL broker, PRT, licencias Business Premium, y limitaciones conocidas
-- `docs/PROJECT_PLAN.md` — Plan de 7 fases con tareas detalladas, entregables, y dependencias
-- `docs/ENTRA_ID_CONFIGURATION.md` — Guía paso a paso: App Registration, permisos API, plataforma Android, Conditional Access, troubleshooting
-- `docs/INTUNE_CONFIGURATION.md` — Guía paso a paso: Enrollment, Compliance Policy, App Protection, Conditional Access, distribución LOB
-- `docs/TECHNICAL_ARCHITECTURE.md` — Stack tecnológico, modelo de datos, interfaces, flujos, configuración MSAL, diseño de UI
-- `docs/PROGRESS.md` — Estado actual y tracking de todas las fases
-- `docs/LESSONS_LEARNED.md` — 6 lecciones aprendidas durante la planificación
-- `docs/SKILLS.md` — Competencias técnicas requeridas y recursos de aprendizaje
-- `docs/PR.md` — Este template de PR
 
-## Decisiones técnicas documentadas
-1. **MSAL broker mode** (no standalone) — SSO device-wide requiere broker obligatoriamente
-2. **Kotlin + Jetpack Compose** — Stack moderno, menos boilerplate que XML
-3. **Room Database** — Para historial con queries y filtros (no SharedPreferences)
-4. **Single account mode** — Un usuario corporativo por dispositivo
-5. **minSdk 24** — Requerido por MSAL v7+
+### Documentacion (Sprint 0)
+- `README.md` - Descripcion del proyecto, arquitectura, setup rapido, compatibilidad SSO
+- `docs/FEASIBILITY.md` - Estudio de viabilidad actualizado con resultados reales
+- `docs/PROJECT_PLAN.md` - Plan de 7 fases con estado actualizado (Sprints 0-2 completados)
+- `docs/ENTRA_ID_CONFIGURATION.md` - Guia completa: App Registration, passwordless, setup de pantallas, troubleshooting
+- `docs/INTUNE_CONFIGURATION.md` - Marcado como OBSOLETO (Samsung WAF no soporta Work Profile)
+- `docs/TECHNICAL_ARCHITECTURE.md` - Stack, modelo de datos, flujos de autenticacion, threading
+- `docs/PROGRESS.md` - Estado actual y tracking de sprints
+- `docs/LESSONS_LEARNED.md` - 22+ lecciones aprendidas
+- `docs/SKILLS.md` - Competencias tecnicas incluyendo Shared Device Mode y passwordless
+- `docs/PR.md` - Este template actualizado
 
-## Limitaciones identificadas
-- El historial en la app se limita a eventos propios (login/logout). Android sandbox impide observar autenticación de otras apps.
-- Para auditoría completa de SSO: usar Entra ID Sign-in Logs (server-side)
-- Licencia Business Premium: máximo 300 usuarios por tenant
-- Broker obligatorio: Authenticator o Company Portal debe estar instalado
+### Codigo (Sprints 1-2)
+- Proyecto Kotlin + Jetpack Compose con estructura MVVM + Clean Architecture
+- `auth_config.json` con configuracion MSAL para Shared Device Mode
+- `AndroidManifest.xml` con BrowserTabActivity (hash raw) y permisos necesarios
+- `AuthRepository` interface + `MsalAuthRepository` implementacion
+- `AuthViewModel` con estados: Idle, Loading, Authenticated, Unauthenticated, Error
+- Todas las llamadas MSAL en `Dispatchers.IO` (evitar crash en main thread)
+- `killBackgroundProcesses()` para limpieza de apps Microsoft en sign-out
+- Modulos Hilt para inyeccion de dependencias
 
-## Blockers para iniciar desarrollo
-- [ ] Se necesita un administrador de Entra ID para crear el App Registration y obtener Client ID + Tenant ID
-- [ ] Se necesita un dispositivo Android enrollado en Intune para testing
+## Decisiones tecnicas
+
+| Decision | Razon |
+|---|---|
+| Shared Device Mode (no Intune) | Samsung WAF no soporta Work Profile ni enrollment |
+| `signIn()` en vez de `acquireToken()` | `signIn()` registra global sign-in para SSO device-wide |
+| `Dispatchers.IO` para MSAL | `getCurrentAccount()` crashea en main thread |
+| Hash raw en manifest, URL-encoded en config | Requisito de MSAL - formatos diferentes segun ubicacion |
+| Sin Conditional Access | Samsung WAF no puede reportar compliance sin enrollment |
+| Sin MAM policies | App Protection Policies bloquean SSO en Shared Device Mode |
+| Passwordless (number matching) | Mas seguro y practico para pantallas compartidas |
+
+## Problemas resueltos
+
+1. Samsung WAF no soporta Work Profile > Shared Device Mode
+2. SSO no propagaba con acquireToken() > Cambiar a signIn()
+3. Crash en main thread con getCurrentAccount() > Dispatchers.IO
+4. BrowserTabActivity no interceptaba redirect > Hash raw en android:path
+5. Signature hash mismatch debug vs release > Usar hash del error de MSAL
+6. MAM policies bloqueaban SSO > Excluir dispositivos compartidos
+7. Passwordless no se configuraba > Reset nuclear de MFA + re-registro
+8. Company Portal error "perfil de trabajo" > Ignorar (solo necesita estar instalado)
+
+## SSO Verificado
+
+| App | Tipo | Estado |
+|---|---|---|
+| Microsoft 365 Copilot | Completo | Verificado |
+| Microsoft Teams | Completo | Verificado |
+| Microsoft Edge | Completo | Verificado |
+| Word, Excel, OneDrive, PowerPoint | Parcial | Verificado |
+| SharePoint, To Do | Parcial | Verificado |
 
 ## Test plan
-- [ ] Revisión de la viabilidad técnica por el equipo
-- [ ] Validación de los pasos de Entra ID con un administrador del tenant
-- [ ] Validación de los pasos de Intune con el equipo de IT
-- [ ] Confirmación de disponibilidad de dispositivo de pruebas
-- [ ] Aprobación del plan de proyecto antes de iniciar Fase 1
+- [x] Login con passwordless funciona en Samsung WAF
+- [x] SSO completo en Teams, M365 Copilot, Edge
+- [x] SSO parcial en apps Office standalone
+- [x] Logout revoca SSO en todas las apps
+- [x] Logout mata procesos en background de apps Microsoft
+- [ ] Unit tests (pendiente Sprint 5)
+- [ ] Integration tests (pendiente Sprint 5)
 
 ---
 
-## Template para PRs de Código (Fases 1-6)
+## Template para PRs de Codigo (Sprints 3-6)
 
 ```markdown
-### Título
-`<type>: <descripción corta>`
+### Titulo
+`<type>: <descripcion corta>`
 
 Tipos: feat, fix, refactor, test, docs, chore
 
@@ -66,20 +97,21 @@ Tipos: feat, fix, refactor, test, docs, chore
 - <bullet points de cambios>
 
 ## Cambios
-- `<archivo>`: <qué cambió y por qué>
+- `<archivo>`: <que cambio y por que>
 
 ## Testing
 - [ ] Unit tests pasan
 - [ ] Integration tests pasan
-- [ ] Manual QA en dispositivo
-- [ ] SSO verificado con Teams/Outlook (si aplica)
+- [ ] Manual QA en Samsung WAF
+- [ ] SSO verificado con Teams/M365 Copilot/Edge (si aplica)
 
 ## Screenshots
 <si hay cambios de UI>
 
 ## Checklist
-- [ ] Código sigue la arquitectura documentada
+- [ ] Codigo sigue la arquitectura documentada (MVVM + Clean Architecture)
 - [ ] No se introdujeron vulnerabilidades de seguridad
 - [ ] No se modificaron archivos fuera del scope
-- [ ] ProGuard rules actualizadas si se añadieron dependencias
+- [ ] Llamadas MSAL en Dispatchers.IO
+- [ ] ProGuard rules actualizadas si se anadieron dependencias
 ```

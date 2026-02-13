@@ -37,6 +37,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.autologin.app.domain.model.AuthState
 import com.autologin.app.domain.model.DetectedApp
+import com.autologin.app.domain.model.SsoType
 
 @Composable
 fun LoginScreen(viewModel: AuthViewModel = hiltViewModel()) {
@@ -182,8 +183,34 @@ private fun AuthenticatedContent(
         Spacer(modifier = Modifier.height(4.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            detectedApps.filter { it.isInstalled }.forEach { app ->
-                AppRow(app = app, ssoActive = true)
+            val installedApps = detectedApps.filter { it.isInstalled }
+            val fullSso = installedApps.filter { it.ssoType == SsoType.FULL }
+            val partialSso = installedApps.filter { it.ssoType == SsoType.PARTIAL }
+
+            if (fullSso.isNotEmpty()) {
+                Text(
+                    text = "Login automatico (no requiere accion)",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 2.dp),
+                )
+                fullSso.forEach { app -> AppRow(app = app, ssoActive = true) }
+            }
+
+            if (partialSso.isNotEmpty()) {
+                Text(
+                    text = "Introduce tu usuario (sin password)",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.tertiary,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 2.dp),
+                )
+                Text(
+                    text = "Escribe tu correo: nombre.apellidos@prestige-expo.com",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 4.dp),
+                )
+                partialSso.forEach { app -> AppRow(app = app, ssoActive = true) }
             }
         }
 
@@ -283,30 +310,42 @@ private fun AppRow(app: DetectedApp, ssoActive: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 3.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            imageVector = if (app.isInstalled && ssoActive) Icons.Default.CheckCircle
-            else if (app.isInstalled) Icons.Default.CheckCircle
-            else Icons.Default.Close,
+            imageVector = if (!app.isInstalled) Icons.Default.Close
+            else Icons.Default.CheckCircle,
             contentDescription = null,
-            tint = if (app.isInstalled && ssoActive) MaterialTheme.colorScheme.secondary
-            else if (app.isInstalled) MaterialTheme.colorScheme.onSurfaceVariant
-            else MaterialTheme.colorScheme.error.copy(alpha = 0.5f),
-            modifier = Modifier.size(20.dp),
+            tint = when {
+                !app.isInstalled -> MaterialTheme.colorScheme.error.copy(alpha = 0.5f)
+                ssoActive && app.ssoType == SsoType.FULL -> MaterialTheme.colorScheme.secondary
+                ssoActive -> MaterialTheme.colorScheme.tertiary
+                else -> MaterialTheme.colorScheme.onSurfaceVariant
+            },
+            modifier = Modifier.size(18.dp),
         )
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(10.dp))
         Text(
             text = app.appName,
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.bodyMedium,
         )
-        if (!app.isInstalled) {
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "(no instalada)",
-                style = MaterialTheme.typography.bodySmall,
+        Spacer(modifier = Modifier.weight(1f))
+        when {
+            !app.isInstalled -> Text(
+                text = "No instalada",
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            ssoActive && app.ssoType == SsoType.FULL -> Text(
+                text = "SSO auto",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.secondary,
+            )
+            ssoActive && app.ssoType == SsoType.PARTIAL -> Text(
+                text = "Sin password",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.tertiary,
             )
         }
     }
