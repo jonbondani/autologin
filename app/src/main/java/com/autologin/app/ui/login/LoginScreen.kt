@@ -19,17 +19,20 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,8 +52,55 @@ fun LoginScreen(viewModel: AuthViewModel = hiltViewModel()) {
     val authState by viewModel.authState.collectAsStateWithLifecycle()
     val detectedApps by viewModel.detectedApps.collectAsStateWithLifecycle()
     val brokerInstalled by viewModel.brokerInstalled.collectAsStateWithLifecycle()
+    val updateState by viewModel.updateState.collectAsStateWithLifecycle()
     val activity = LocalContext.current as Activity
     val context = LocalContext.current
+
+    // Auto-install when download completes
+    LaunchedEffect(updateState) {
+        if (updateState is UpdateState.ReadyToInstall) {
+            viewModel.installUpdate(context)
+        }
+    }
+
+    // Download progress dialog
+    if (updateState is UpdateState.Downloading) {
+        val progress = (updateState as UpdateState.Downloading).progress
+        AlertDialog(
+            onDismissRequest = { /* non-dismissable during download */ },
+            title = { Text("Descargando actualizacion") },
+            text = {
+                Column {
+                    LinearProgressIndicator(
+                        progress = { progress / 100f },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "$progress%",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            },
+            confirmButton = {},
+        )
+    }
+
+    // Error dialog
+    if (updateState is UpdateState.Error) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissUpdateError() },
+            title = { Text("Error de actualizacion") },
+            text = { Text((updateState as UpdateState.Error).message) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.dismissUpdateError() }) {
+                    Text("Cerrar")
+                }
+            },
+        )
+    }
 
     when {
         !brokerInstalled -> NoBrokerContent()
@@ -59,12 +109,14 @@ fun LoginScreen(viewModel: AuthViewModel = hiltViewModel()) {
             state = authState as AuthState.Authenticated,
             isSharedDevice = viewModel.isSharedDevice,
             detectedApps = detectedApps,
+            updateState = updateState,
             onSignOut = { viewModel.signOut() },
             onOpenApp = { app ->
                 viewModel.getLaunchIntent(app.packageName)?.let { intent ->
                     context.startActivity(intent)
                 }
             },
+            onUpdate = { viewModel.downloadUpdate() },
         )
         authState is AuthState.Error -> ErrorContent(
             state = authState as AuthState.Error,
@@ -137,8 +189,10 @@ private fun AuthenticatedContent(
     state: AuthState.Authenticated,
     isSharedDevice: Boolean,
     detectedApps: List<DetectedApp>,
+    updateState: UpdateState,
     onSignOut: () -> Unit,
     onOpenApp: (DetectedApp) -> Unit,
+    onUpdate: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -285,7 +339,7 @@ private fun AuthenticatedContent(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        AppFooter()
+        AppFooter(updateState = updateState, onUpdate = onUpdate)
     }
 }
 
@@ -407,13 +461,27 @@ private fun AppRow(app: DetectedApp, ssoActive: Boolean, onOpen: (() -> Unit)? =
 }
 
 @Composable
-private fun AppFooter() {
+private fun AppFooter(updateState: UpdateState = UpdateState.NoUpdate, onUpdate: () -> Unit = {}) {
     val context = LocalContext.current
 
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        // Update button when available
+        if (updateState is UpdateState.Available) {
+            Button(
+                onClick = onUpdate,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                ),
+            ) {
+                Text("Actualizar a ${updateState.update.versionName}")
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+        }
+
         TextButton(
             onClick = {
                 val log = try {

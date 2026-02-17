@@ -4,6 +4,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <queries>
         <package android:name="com.microsoft.office.officehubrow" />
@@ -47,10 +48,20 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
                     android:host="com.autologin.app"
-                    android:path="/TDPWfC9supht4/c0hKDPvlzj+O8="
+                    android:path="/LwIfQPh5hACr3e3Oo3SsrzDwQFU="
                     android:scheme="msauth" />
             </intent-filter>
         </activity>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
     </application>
 
