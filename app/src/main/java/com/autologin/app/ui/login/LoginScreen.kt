@@ -3,6 +3,7 @@ package com.autologin.app.ui.login
 import android.app.Activity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +25,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,6 +47,7 @@ fun LoginScreen(viewModel: AuthViewModel = hiltViewModel()) {
     val detectedApps by viewModel.detectedApps.collectAsStateWithLifecycle()
     val brokerInstalled by viewModel.brokerInstalled.collectAsStateWithLifecycle()
     val activity = LocalContext.current as Activity
+    val context = LocalContext.current
 
     when {
         !brokerInstalled -> NoBrokerContent()
@@ -54,6 +57,11 @@ fun LoginScreen(viewModel: AuthViewModel = hiltViewModel()) {
             isSharedDevice = viewModel.isSharedDevice,
             detectedApps = detectedApps,
             onSignOut = { viewModel.signOut() },
+            onOpenApp = { app ->
+                viewModel.getLaunchIntent(app.packageName)?.let { intent ->
+                    context.startActivity(intent)
+                }
+            },
         )
         authState is AuthState.Error -> ErrorContent(
             state = authState as AuthState.Error,
@@ -91,7 +99,7 @@ private fun UnauthenticatedContent(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Inicia sesion para activar SSO en todas tus apps Microsoft",
+                text = "Inicia sesion para acceder a todas tus apps Microsoft",
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -127,6 +135,7 @@ private fun AuthenticatedContent(
     isSharedDevice: Boolean,
     detectedApps: List<DetectedApp>,
     onSignOut: () -> Unit,
+    onOpenApp: (DetectedApp) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -165,7 +174,7 @@ private fun AuthenticatedContent(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = if (isSharedDevice) "SSO Activo (Dispositivo compartido)" else "SSO Activo",
+                    text = if (isSharedDevice) "Sesion activa (Dispositivo compartido)" else "Sesion activa",
                     color = MaterialTheme.colorScheme.secondary,
                     style = MaterialTheme.typography.labelMedium,
                 )
@@ -175,47 +184,84 @@ private fun AuthenticatedContent(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "Apps con SSO disponible",
+            text = "Apps disponibles",
             style = MaterialTheme.typography.titleSmall,
             modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
         )
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        Column(modifier = Modifier.weight(1f)) {
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.Top,
+        ) {
             val installedApps = detectedApps.filter { it.isInstalled }
             val fullSso = installedApps.filter { it.ssoType == SsoType.FULL }
             val partialSso = installedApps.filter { it.ssoType == SsoType.PARTIAL }
 
-            if (fullSso.isNotEmpty()) {
+            // Izquierda: requieren identificacion
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
                 Text(
-                    text = "Login automatico (no requiere accion)",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.secondary,
-                    modifier = Modifier.padding(top = 4.dp, bottom = 2.dp),
-                )
-                fullSso.forEach { app -> AppRow(app = app, ssoActive = true) }
-            }
-
-            if (partialSso.isNotEmpty()) {
-                Text(
-                    text = "Introduce tu usuario (sin password)",
+                    text = "Requiere identificacion",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.tertiary,
-                    modifier = Modifier.padding(top = 8.dp, bottom = 2.dp),
+                    modifier = Modifier.padding(bottom = 2.dp),
+                    textAlign = TextAlign.Center,
                 )
                 Text(
-                    text = "Escribe tu correo: nombre.apellidos@prestige-expo.com",
+                    text = "Escribe tu correo (sin password)",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 4.dp),
+                    modifier = Modifier.padding(bottom = 8.dp),
+                    textAlign = TextAlign.Center,
                 )
-                partialSso.forEach { app -> AppRow(app = app, ssoActive = true) }
+                Column(
+                    modifier = Modifier.width(IntrinsicSize.Max),
+                ) {
+                    partialSso.forEach { app ->
+                        AppRow(app = app, ssoActive = true, onOpen = { onOpenApp(app) })
+                    }
+                }
+            }
+
+            // Derecha: acceso automatico
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = "Acceso automatico",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.padding(bottom = 2.dp),
+                    textAlign = TextAlign.Center,
+                )
+                Text(
+                    text = "No requiere accion",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 8.dp),
+                    textAlign = TextAlign.Center,
+                )
+                Column(
+                    modifier = Modifier.width(IntrinsicSize.Max),
+                ) {
+                    fullSso.forEach { app ->
+                        AppRow(app = app, ssoActive = true, onOpen = { onOpenApp(app) })
+                    }
+                }
             }
         }
 
         Text(
-            text = "Cerrar sesion revocara el SSO en todas las apps",
+            text = "Cerrar sesion revocara el acceso en todas las apps",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.error,
             textAlign = TextAlign.Center,
@@ -298,7 +344,7 @@ private fun NoBrokerContent() {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Se requiere Microsoft Authenticator o Company Portal instalado para el SSO",
+            text = "Se requiere Microsoft Authenticator o Company Portal instalado",
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
         )
@@ -306,47 +352,49 @@ private fun NoBrokerContent() {
 }
 
 @Composable
-private fun AppRow(app: DetectedApp, ssoActive: Boolean) {
+private fun AppRow(app: DetectedApp, ssoActive: Boolean, onOpen: (() -> Unit)? = null) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 3.dp),
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            imageVector = if (!app.isInstalled) Icons.Default.Close
-            else Icons.Default.CheckCircle,
-            contentDescription = null,
-            tint = when {
-                !app.isInstalled -> MaterialTheme.colorScheme.error.copy(alpha = 0.5f)
-                ssoActive && app.ssoType == SsoType.FULL -> MaterialTheme.colorScheme.secondary
-                ssoActive -> MaterialTheme.colorScheme.tertiary
-                else -> MaterialTheme.colorScheme.onSurfaceVariant
-            },
-            modifier = Modifier.size(18.dp),
-        )
-        Spacer(modifier = Modifier.width(10.dp))
-        Text(
-            text = app.appName,
-            style = MaterialTheme.typography.bodyMedium,
-        )
-        Spacer(modifier = Modifier.weight(1f))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = if (!app.isInstalled) Icons.Default.Close
+                else Icons.Default.CheckCircle,
+                contentDescription = null,
+                tint = when {
+                    !app.isInstalled -> MaterialTheme.colorScheme.error.copy(alpha = 0.5f)
+                    ssoActive && app.ssoType == SsoType.FULL -> MaterialTheme.colorScheme.secondary
+                    ssoActive -> MaterialTheme.colorScheme.tertiary
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                modifier = Modifier.size(18.dp),
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Text(
+                text = app.appName,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+        Spacer(modifier = Modifier.width(16.dp))
         when {
             !app.isInstalled -> Text(
                 text = "No instalada",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            ssoActive && app.ssoType == SsoType.FULL -> Text(
-                text = "SSO auto",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.secondary,
-            )
-            ssoActive && app.ssoType == SsoType.PARTIAL -> Text(
-                text = "Sin password",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.tertiary,
-            )
+            app.isInstalled && onOpen != null -> OutlinedButton(
+                onClick = onOpen,
+            ) {
+                Text(
+                    text = if (app.ssoType == SsoType.FULL) "Abrir" else "Identificate",
+                )
+            }
         }
     }
 }

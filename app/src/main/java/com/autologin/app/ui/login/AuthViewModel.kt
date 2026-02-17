@@ -1,6 +1,7 @@
 package com.autologin.app.ui.login
 
 import android.app.Activity
+import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.autologin.app.data.repository.AppDetector
@@ -50,6 +51,8 @@ class AuthViewModel @Inject constructor(
             }
         }
     }
+
+    fun getLaunchIntent(packageName: String): Intent? = appDetector.getLaunchIntent(packageName)
 
     fun signOut() {
         viewModelScope.launch(Dispatchers.IO) {

@@ -104,7 +104,7 @@ class AuthViewModelTest {
 
     @Test
     fun `init detects apps and checks broker`() = runTest {
-        val viewModel = AuthViewModel(authRepository, appDetector, historyRepository)
+        AuthViewModel(authRepository, appDetector, historyRepository)
 
         verify(appDetector).getDetectedApps()
         verify(appDetector).isBrokerInstalled()

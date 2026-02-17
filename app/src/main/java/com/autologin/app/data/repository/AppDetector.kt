@@ -1,6 +1,7 @@
 package com.autologin.app.data.repository
 
 import android.app.ActivityManager
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.util.Log
 import com.autologin.app.domain.model.DetectedApp
@@ -63,12 +64,22 @@ class AppDetector @Inject constructor(
 
     fun killMicrosoftApps() {
         appsToClean.forEach { pkg ->
-            try {
-                activityManager.killBackgroundProcesses(pkg)
-                Log.d("AutoLogin", "Killed background process: $pkg")
-            } catch (e: Exception) {
-                Log.w("AutoLogin", "Could not kill $pkg: ${e.message}")
-            }
+            killApp(pkg)
+        }
+    }
+
+    fun killApp(packageName: String) {
+        try {
+            activityManager.killBackgroundProcesses(packageName)
+            Log.d("AutoLogin", "Killed background process: $packageName")
+        } catch (e: Exception) {
+            Log.w("AutoLogin", "Could not kill $packageName: ${e.message}")
+        }
+    }
+
+    fun getLaunchIntent(packageName: String): Intent? {
+        return packageManager.getLaunchIntentForPackage(packageName)?.apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
     }
 
