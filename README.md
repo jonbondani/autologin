@@ -192,6 +192,7 @@ Las pantallas compartidas usan autenticacion sin contrasena con number matching:
 
 | Documento | Descripcion |
 |---|---|
+| [Manual de Usuario](docs/MANUAL_USUARIO.md) | Guia sencilla para usuarios de las pantallas |
 | [Configuracion Entra ID](docs/ENTRA_ID_CONFIGURATION.md) | Guia completa: App Registration, passwordless, setup de pantallas, troubleshooting |
 | [Arquitectura Tecnica](docs/TECHNICAL_ARCHITECTURE.md) | Diseno tecnico: stack, flujos, threading, SSO |
 | [Estudio de Viabilidad](docs/FEASIBILITY.md) | Analisis tecnico con resultados confirmados |
