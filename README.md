@@ -7,8 +7,9 @@ App Android empresarial que centraliza la autenticacion Microsoft 365 en pantall
 1. El usuario abre AutoLogin en la pantalla Samsung WAF y pulsa **Login**
 2. Se autentica con la cuenta compartida via **passwordless** (number matching con Authenticator en un movil)
 3. El broker de Microsoft (Authenticator) registra un **global sign-in** y almacena un Primary Refresh Token (PRT)
-4. Las apps Microsoft compatibles inician sesion automaticamente
+4. La pantalla principal muestra las apps en dos columnas: **acceso automatico** y **requiere identificacion**, cada una con un boton para abrirla directamente
 5. Al pulsar **Logout**, se ejecuta un **global sign-out** que revoca el PRT, cierra sesion en todas las apps y mata sus procesos en background
+6. El usuario puede enviar un **log de errores** al equipo de IT directamente desde la app
 
 ## Compatibilidad SSO
 
@@ -227,6 +228,13 @@ autologin/
 +-- README.md
 ```
 
+## Versionado
+
+La version se genera automaticamente a partir de los commits de git:
+- **versionCode**: numero total de commits
+- **versionName**: `1.0.<commits>` (ej: `1.0.14`)
+- **Build info**: hash corto del commit visible en la app
+
 ## Licencia
 
-Uso interno empresarial.
+Uso interno empresarial. Desarrollado por el Departamento de IT de Prestige-Expo.

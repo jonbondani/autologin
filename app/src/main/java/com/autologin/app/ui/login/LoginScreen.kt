@@ -1,6 +1,7 @@
 package com.autologin.app.ui.login
 
 import android.app.Activity
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -27,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -37,6 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.autologin.app.BuildConfig
 import com.autologin.app.domain.model.AuthState
 import com.autologin.app.domain.model.DetectedApp
 import com.autologin.app.domain.model.SsoType
@@ -279,6 +282,10 @@ private fun AuthenticatedContent(
         ) {
             Text("Cerrar Sesion")
         }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        AppFooter()
     }
 }
 
@@ -396,5 +403,56 @@ private fun AppRow(app: DetectedApp, ssoActive: Boolean, onOpen: (() -> Unit)? =
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun AppFooter() {
+    val context = LocalContext.current
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        TextButton(
+            onClick = {
+                val log = try {
+                    val process = Runtime.getRuntime().exec(
+                        arrayOf("logcat", "-d", "-t", "1000", "--pid=${android.os.Process.myPid()}")
+                    )
+                    process.inputStream.bufferedReader().readText()
+                } catch (e: Exception) {
+                    "Error al recopilar logs: ${e.message}"
+                }
+                val intent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_SUBJECT, "AutoLogin v${BuildConfig.VERSION_NAME} - Log de errores")
+                    putExtra(
+                        Intent.EXTRA_TEXT,
+                        "AutoLogin v${BuildConfig.VERSION_NAME} (build ${BuildConfig.BUILD_NUMBER}, ${BuildConfig.GIT_HASH})\n\n$log"
+                    )
+                }
+                context.startActivity(Intent.createChooser(intent, "Enviar log a IT"))
+            },
+        ) {
+            Text(
+                text = "Enviar log de errores a IT",
+                style = MaterialTheme.typography.labelSmall,
+            )
+        }
+
+        Text(
+            text = "v${BuildConfig.VERSION_NAME} (${BuildConfig.GIT_HASH})",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        )
+
+        Spacer(modifier = Modifier.height(2.dp))
+
+        Text(
+            text = "Departamento de IT - Prestige-Expo",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+        )
     }
 }

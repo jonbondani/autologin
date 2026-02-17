@@ -1,8 +1,8 @@
 # Progreso del Proyecto - AutoLogin
 
-## Estado General: SPRINT 2 COMPLETADO - SSO FUNCIONAL
+## Estado General: SPRINT 6 EN CURSO - APP EN PRODUCCION
 
-Ultima actualizacion: 2026-02-13
+Ultima actualizacion: 2026-02-17
 
 ---
 
@@ -117,53 +117,56 @@ Ultima actualizacion: 2026-02-13
 ---
 
 ## Sprint 3: Base de Datos e Historial
-**Estado**: PENDIENTE
+**Estado**: COMPLETADO
 
 | Tarea | Estado | Fecha | Notas |
 |---|---|---|---|
-| Crear entity AuthEvent | Pendiente | - | |
-| Crear AuthEventDao | Pendiente | - | |
-| Crear AuthEventDatabase | Pendiente | - | |
-| Implementar AppDetector | Pendiente | - | |
-| Implementar HistoryRepository | Pendiente | - | |
+| Crear entity AuthEvent | COMPLETADO | 2026-02-13 | Room entity con tipo, email, nombre, timestamp |
+| Crear AuthEventDao | COMPLETADO | 2026-02-13 | Queries por fecha |
+| Crear AuthEventDatabase | COMPLETADO | 2026-02-13 | autologin.db |
+| Implementar AppDetector | COMPLETADO | 2026-02-13 | Deteccion de apps + kill + launch intent |
+| Implementar HistoryRepository | COMPLETADO | 2026-02-13 | RoomHistoryRepository |
 
 ---
 
 ## Sprint 4: UI con Jetpack Compose
-**Estado**: PENDIENTE
+**Estado**: COMPLETADO
 
 | Tarea | Estado | Fecha | Notas |
 |---|---|---|---|
-| Pantalla Login/Status | Pendiente | - | |
-| Pantalla Historial | Pendiente | - | |
-| Bottom Navigation | Pendiente | - | |
-| Material 3 Theme | Pendiente | - | |
+| Pantalla Login/Status | COMPLETADO | 2026-02-13 | Dos columnas: acceso automatico / requiere identificacion |
+| Pantalla Historial | COMPLETADO | 2026-02-13 | Filtro por fechas, LazyColumn |
+| Bottom Navigation | COMPLETADO | 2026-02-13 | Sesion + Historial |
+| Material 3 Theme | COMPLETADO | 2026-02-13 | |
+| Botones "Abrir" / "Identificate" | COMPLETADO | 2026-02-17 | Lanzamiento directo de apps Microsoft |
+| Footer con version, copyright, log | COMPLETADO | 2026-02-17 | Version auto desde commits git |
 
 ---
 
 ## Sprint 5: Testing y QA
-**Estado**: PENDIENTE
+**Estado**: COMPLETADO
 
 | Tarea | Estado | Fecha | Notas |
 |---|---|---|---|
-| Unit tests: AuthRepository | Pendiente | - | |
-| Unit tests: HistoryRepository | Pendiente | - | |
-| Unit tests: ViewModels | Pendiente | - | |
-| Integration tests | Pendiente | - | |
-| QA manual completo | Pendiente | - | En Samsung WAF Display |
+| Unit tests: AppDetector | COMPLETADO | 2026-02-15 | 6 tests |
+| Unit tests: HistoryRepository | COMPLETADO | 2026-02-15 | 4 tests |
+| Unit tests: AuthViewModel | COMPLETADO | 2026-02-15 | 5 tests |
+| QA manual completo | COMPLETADO | 2026-02-17 | En Samsung WAF Display |
 
 ---
 
 ## Sprint 6: Release y Distribucion
-**Estado**: PENDIENTE
+**Estado**: EN CURSO
 
 | Tarea | Estado | Fecha | Notas |
 |---|---|---|---|
-| Signing config release | Pendiente | - | |
-| Hash de release en Entra ID | Pendiente | - | |
-| Build APK release | Pendiente | - | |
-| Proguard/R8 rules | Pendiente | - | |
-| Distribuir a displays | Pendiente | - | Via sideload (APK) |
+| Signing config release | COMPLETADO | 2026-02-16 | keystore.properties (gitignored) |
+| Hash de release en Entra ID | PENDIENTE | - | Necesario para APK release |
+| Build APK release | PENDIENTE | - | |
+| Proguard/R8 rules | COMPLETADO | 2026-02-16 | MSAL + Room rules |
+| Versionado auto desde git | COMPLETADO | 2026-02-17 | versionCode=commits, versionName=1.0.N |
+| Envio de logs a IT | COMPLETADO | 2026-02-17 | Boton en footer, via Intent.ACTION_SEND |
+| Distribuir a displays | PENDIENTE | - | Via sideload (APK) |
 
 ---
 
@@ -204,6 +207,16 @@ Ultima actualizacion: 2026-02-13
 
 ---
 
+## Registro de Decisiones (continuacion)
+
+| Fecha | Decision | Razon |
+|---|---|---|
+| 2026-02-17 | No usar killBackgroundProcesses al abrir apps | Rompe el estado de auth de Excel/Office, causa bucle SyncPlaces |
+| 2026-02-17 | Launch intent directo con FLAG_ACTIVITY_CLEAR_TOP | Suficiente para SSO, el broker inyecta credenciales en cold start |
+| 2026-02-17 | Versionado automatico desde git commits | Identificacion inequivoca de builds en dispositivos |
+| 2026-02-17 | Envio de logs via Intent.ACTION_SEND | No requiere permisos extra, captura logs del proceso (incluyendo MSAL) |
+| 2026-02-17 | pm clear no disponible desde la app | Requiere CLEAR_APP_USER_DATA (solo device owner). Cloud DPC es el device owner |
+
 ## Blockers Actuales
 
-Ninguno. Sprint 2 completado exitosamente. Proximo paso: Sprint 3 (Base de Datos e Historial).
+Hash de release pendiente de registrar en Entra ID antes de generar APK release.

@@ -1,3 +1,4 @@
+import java.io.ByteArrayOutputStream
 import java.util.Properties
 
 plugins {
@@ -15,6 +16,26 @@ val keystoreProperties = Properties().apply {
     }
 }
 
+fun gitCommitCount(): Int = try {
+    val stdout = ByteArrayOutputStream()
+    exec {
+        commandLine("git", "rev-list", "--count", "HEAD")
+        standardOutput = stdout
+        isIgnoreExitValue = true
+    }
+    stdout.toString().trim().toIntOrNull() ?: 1
+} catch (_: Exception) { 1 }
+
+fun gitShortHash(): String = try {
+    val stdout = ByteArrayOutputStream()
+    exec {
+        commandLine("git", "rev-parse", "--short", "HEAD")
+        standardOutput = stdout
+        isIgnoreExitValue = true
+    }
+    stdout.toString().trim().ifEmpty { "unknown" }
+} catch (_: Exception) { "unknown" }
+
 android {
     namespace = "com.autologin.app"
     compileSdk = 35
@@ -23,10 +44,13 @@ android {
         applicationId = "com.autologin.app"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = gitCommitCount()
+        versionName = "1.0.${gitCommitCount()}"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "GIT_HASH", "\"${gitShortHash()}\"")
+        buildConfigField("int", "BUILD_NUMBER", "${gitCommitCount()}")
     }
 
     if (keystorePropertiesFile.exists()) {
@@ -65,6 +89,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

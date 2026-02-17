@@ -441,16 +441,20 @@ class AppDetector(private val packageManager: PackageManager) {
 
 **Estado: No autenticado**
 - Logo AutoLogin (centrado)
-- Texto: "Inicia sesion para activar SSO en todas tus apps Microsoft"
+- Texto: "Inicia sesion para acceder a todas tus apps Microsoft"
 - Boton primario: "Iniciar Sesion con Microsoft"
 - Seccion inferior: Lista de apps Microsoft detectadas con badges instalado/no instalado
 
 **Estado: Autenticado**
 - Nombre del usuario + email
-- Badge verde: "SSO Activo"
-- Lista de apps con SSO (solo las instaladas, con indicador de tipo: completo/parcial)
+- Badge verde: "Sesion activa"
+- Dos columnas de apps:
+  - **Izquierda**: "Requiere identificacion" - apps con SSO parcial, boton "Identificate"
+  - **Derecha**: "Acceso automatico" - apps con SSO completo, boton "Abrir"
+- Cada boton abre la app directamente mediante launch intent
 - Boton destructivo: "Cerrar Sesion"
-- Texto de advertencia: "Cerrar sesion revocara el SSO en todas las apps"
+- Texto de advertencia: "Cerrar sesion revocara el acceso en todas las apps"
+- Footer: boton "Enviar log de errores a IT", version con hash del commit, copyright Prestige-Expo
 
 **Estado: Cargando**
 - CircularProgressIndicator centrado
@@ -472,8 +476,13 @@ class AppDetector(private val packageManager: PackageManager) {
 
 ### Navegacion
 - BottomNavigation con 2 items:
-  - "SSO" (icono: Lock)
+  - "Sesion" (icono: Lock)
   - "Historial" (icono: DateRange)
+
+### Versionado
+- versionCode y versionName generados automaticamente desde el numero de commits git
+- Hash corto del commit visible en el footer de la app
+- BuildConfig fields: GIT_HASH, BUILD_NUMBER
 
 ---
 
