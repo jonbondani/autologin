@@ -59,7 +59,7 @@ class GithubUpdateRepository @Inject constructor(
 
     override suspend fun downloadApk(url: String, onProgress: (Int) -> Unit): File {
         val updatesDir = File(context.cacheDir, "updates").apply { mkdirs() }
-        val apkFile = File(updatesDir, "app-release.apk")
+        val apkFile = File(updatesDir, "AutoLogin-update.apk")
         if (apkFile.exists()) apkFile.delete()
 
         val connection = URL(url).openConnection() as HttpURLConnection

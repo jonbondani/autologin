@@ -39,6 +39,6 @@
 
 - [ ] Actualizar `docs/PROGRESS.md` con fecha y estado final de Sprint 6
 - [ ] Crear PR de release con evidencias de QA
-- [ ] Etiquetar release en GitHub y adjuntar APK final
+- [ ] Etiquetar release en GitHub y adjuntar APK final (ver `docs/INSTALLATION.md`)
 - [ ] Guardar plan de rollback (APK anterior disponible)
 
