@@ -10,7 +10,7 @@ AutoLogin permite iniciar sesion una sola vez y acceder automaticamente a todas 
 
 1. Abre la app **AutoLogin** en la pantalla
 2. Pulsa **"Iniciar Sesion con Microsoft"**
-3. Introduce el correo: `pantallas@prestige-expo.com`
+3. Introduce el correo: `shared-screen-account@example.com`
 4. La pantalla mostrara un **numero de 2 digitos**
 5. Abre **Microsoft Authenticator** en el telefono movil del responsable
 6. Introduce ese mismo numero en Authenticator
@@ -30,7 +30,7 @@ Una vez iniciada la sesion, la pantalla principal muestra las apps en dos grupos
 ### Requiere identificacion (columna izquierda)
 - **OneDrive, Word, Excel, OneNote**
 - Pulsa **"Identificate"** y la app se abrira
-- Escribe el correo (`nombre.apellidos@prestige-expo.com`) cuando la app lo pida
+- Escribe el correo (`usuario@example.com`) cuando la app lo pida
 - **No te pedira contrasena**, solo confirmar el correo
 
 ---

@@ -10,18 +10,18 @@ Ultima actualizacion: 2026-02-17
 
 | Parametro | Valor |
 |---|---|
-| Client ID | `678488cf-7a78-4487-bb96-76f479a4967a` |
-| Tenant ID | `909c0d8a-dd01-4fe7-ac8a-f336e540fdfa` |
-| Redirect URI | `msauth://com.autologin.app/TDPWfC9supht4%2Fc0hKDPvlzj%2BO8%3D` |
-| Signature Hash (raw) | `TDPWfC9supht4/c0hKDPvlzj+O8=` |
-| Shared Device ID | `f3a76792-04eb-4ac8-a42b-aa431ccea198` |
+| Client ID | `<ENTRA_CLIENT_ID>` |
+| Tenant ID | `<ENTRA_TENANT_ID>` |
+| Redirect URI | `msauth://com.autologin.app/<SIGNATURE_HASH_URLENCODED>` |
+| Signature Hash (raw) | `<SIGNATURE_HASH_RAW>` |
+| Shared Device ID | `<SHARED_DEVICE_ID>` |
 | Dispositivo | Samsung WAF Interactive Display 65" |
 | Android | 14 (API 34) |
-| Android ID | `6a184d94879d45b6` |
+| Android ID | `<ANDROID_DEVICE_ID>` |
 | GMS | Habilitado (Play Store funcional) |
 | Modo | Shared Device Mode via Authenticator (NO Intune) |
-| Cuenta compartida | `pantallas@prestige-expo.com` |
-| Cloud Device Admin | `adminprestige@prestige-expo.com` |
+| Cuenta compartida | `shared-screen-account@example.com` |
+| Cloud Device Admin | `cloud-device-admin@example.com` |
 | Rol del admin | Administrador de dispositivos en la nube |
 | Autenticacion | Passwordless con Authenticator number matching |
 
@@ -37,12 +37,12 @@ Ultima actualizacion: 2026-02-17
 | Configurar permisos API | COMPLETADO | 2026-02-10 | openid, profile, offline_access, User.Read |
 | Grant admin consent | COMPLETADO | 2026-02-10 | |
 | Desactivar Security Defaults | COMPLETADO | 2026-02-10 | Necesario para auth passwordless |
-| Configurar plataforma Android | COMPLETADO | 2026-02-11 | Hash: TDPWfC9supht4/c0hKDPvlzj+O8= |
-| Rol Cloud Device Admin asignado | COMPLETADO | 2026-02-10 | A adminprestige@prestige-expo.com |
-| Shared Device Mode activado | COMPLETADO | 2026-02-10 | Device ID: f3a76792... |
+| Configurar plataforma Android | COMPLETADO | 2026-02-11 | Hash: <SIGNATURE_HASH_RAW> |
+| Rol Cloud Device Admin asignado | COMPLETADO | 2026-02-10 | A cloud-device-admin@example.com |
+| Shared Device Mode activado | COMPLETADO | 2026-02-10 | Device ID: <SHARED_DEVICE_ID> |
 | Crear grupo AutoLogin Users | COMPLETADO | 2026-02-10 | |
 | Configurar Authenticator passwordless | COMPLETADO | 2026-02-12 | Modo "Sin contrasena", OTP habilitado |
-| Registrar passwordless para pantallas@ | COMPLETADO | 2026-02-12 | Number matching verificado |
+| Registrar passwordless para cuenta compartida | COMPLETADO | 2026-02-12 | Number matching verificado |
 
 ### Decisiones tomadas en Sprint 0:
 - Dispositivos son Samsung WAF Interactive Displays (no phones) - **Work Profile no soportado**
@@ -88,7 +88,7 @@ Ultima actualizacion: 2026-02-17
 | Resolver: getCurrentAccount main thread | COMPLETADO | 2026-02-12 | Movido a withContext(Dispatchers.IO) |
 | Resolver: signIn vs acquireToken | COMPLETADO | 2026-02-12 | signIn() obligatorio para SSO global en SDM |
 | Resolver: account already signed in | COMPLETADO | 2026-02-12 | Verificar cuenta existente antes de signIn() |
-| Configurar passwordless para pantallas@ | COMPLETADO | 2026-02-12 | Authenticator como "Cuenta profesional" via QR |
+| Configurar passwordless para cuenta compartida | COMPLETADO | 2026-02-12 | Authenticator como "Cuenta profesional" via QR |
 | Resolver: passwordless no se configuraba | COMPLETADO | 2026-02-12 | Reset nuclear de MFA + re-registro |
 | Excluir MAM de dispositivos compartidos | COMPLETADO | 2026-02-12 | MAM bloqueaba SSO |
 | Test manual: SSO en M365 Copilot | COMPLETADO | 2026-02-12 | SSO completo automatico |

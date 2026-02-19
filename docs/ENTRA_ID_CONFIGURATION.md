@@ -8,13 +8,13 @@
 
 | Parametro | Valor |
 |---|---|
-| Application (Client) ID | `678488cf-7a78-4487-bb96-76f479a4967a` |
-| Directory (Tenant) ID | `909c0d8a-dd01-4fe7-ac8a-f336e540fdfa` |
-| Redirect URI (auth_config.json) | `msauth://com.autologin.app/TDPWfC9supht4%2Fc0hKDPvlzj%2BO8%3D` |
-| Signature Hash (portal Entra / manifest) | `TDPWfC9supht4/c0hKDPvlzj+O8=` |
+| Application (Client) ID | `<ENTRA_CLIENT_ID>` |
+| Directory (Tenant) ID | `<ENTRA_TENANT_ID>` |
+| Redirect URI (auth_config.json) | `msauth://com.autologin.app/<SIGNATURE_HASH_URLENCODED>` |
+| Signature Hash (portal Entra / manifest) | `<SIGNATURE_HASH_RAW>` |
 | Package Name | `com.autologin.app` |
-| Cuenta compartida | `pantallas@prestige-expo.com` |
-| Cuenta Cloud Device Admin | `adminprestige@prestige-expo.com` |
+| Cuenta compartida | `shared-screen-account@example.com` |
+| Cuenta Cloud Device Admin | `cloud-device-admin@example.com` |
 | Rol del admin | Administrador de dispositivos en la nube |
 
 > **IMPORTANTE**: El Redirect URI en `auth_config.json` usa el hash URL-encoded (`%2F`, `%2B`, `%3D`), pero en el portal de Entra ID y en `AndroidManifest.xml` (`android:path`) se usa el hash raw con caracteres `/`, `+`, `=`.
@@ -40,8 +40,8 @@
 
 ### Resultado:
 Se crea la app y se muestra la pagina "Overview". Los valores generados son:
-- **Application (client) ID**: `678488cf-7a78-4487-bb96-76f479a4967a`
-- **Directory (tenant) ID**: `909c0d8a-dd01-4fe7-ac8a-f336e540fdfa`
+- **Application (client) ID**: `<ENTRA_CLIENT_ID>`
+- **Directory (tenant) ID**: `<ENTRA_TENANT_ID>`
 
 ---
 
@@ -77,7 +77,7 @@ keytool -exportcert -alias <TU_ALIAS> \
   | openssl sha1 -binary | openssl base64
 ```
 
-**Resultado actual**: `TDPWfC9supht4/c0hKDPvlzj+O8=`
+**Resultado actual**: `<SIGNATURE_HASH_RAW>`
 
 > **LECCION APRENDIDA**: El hash de debug y release son diferentes. Si usas el hash de debug en Entra ID y luego compilas en release (o viceversa), obtendras error de redirect_uri mismatch. MSAL muestra el hash correcto en su mensaje de error - usalo para corregir.
 
@@ -88,13 +88,13 @@ keytool -exportcert -alias <TU_ALIAS> \
 3. Selecciona **"Android"**
 4. Rellena:
    - **Package name**: `com.autologin.app`
-   - **Signature hash**: `TDPWfC9supht4/c0hKDPvlzj+O8=` (hash raw, NO URL-encoded)
+   - **Signature hash**: `<SIGNATURE_HASH_RAW>` (hash raw, NO URL-encoded)
 5. Haz clic en **"Configure"**
 
 ### Resultado:
 Se genera automaticamente el Redirect URI:
 ```
-msauth://com.autologin.app/TDPWfC9supht4%2Fc0hKDPvlzj%2BO8%3D
+msauth://com.autologin.app/<SIGNATURE_HASH_URLENCODED>
 ```
 
 ---
@@ -168,7 +168,7 @@ Esta seccion configura la autenticacion sin contrasena con Microsoft Authenticat
 
 ## Paso 8: Configurar Passwordless para Cuenta Compartida
 
-Este es el proceso **probado y confirmado** para configurar autenticacion sin contrasena para una cuenta (ej: `pantallas@prestige-expo.com`).
+Este es el proceso **probado y confirmado** para configurar autenticacion sin contrasena para una cuenta (ej: `shared-screen-account@example.com`).
 
 ### Requisitos previos por cuenta:
 - La cuenta debe tener licencia Microsoft 365 Business Premium
@@ -178,7 +178,7 @@ Este es el proceso **probado y confirmado** para configurar autenticacion sin co
 ### 8.1 Registrar Authenticator en el telefono movil
 
 1. Desde un **portatil**, abre el navegador y ve a: **https://aka.ms/mysecurityinfo**
-2. Inicia sesion con la cuenta: `pantallas@prestige-expo.com`
+2. Inicia sesion con la cuenta: `shared-screen-account@example.com`
 3. Haz clic en **"+ Agregar metodo de inicio de sesion"** (Add sign-in method)
 4. Selecciona **"Microsoft Authenticator"**
 5. En el telefono movil, abre **Microsoft Authenticator**
@@ -201,7 +201,7 @@ Este es el proceso **probado y confirmado** para configurar autenticacion sin co
 
 1. Abre una ventana de navegador en modo incognito
 2. Ve a **https://portal.office.com**
-3. Introduce el email: `pantallas@prestige-expo.com`
+3. Introduce el email: `shared-screen-account@example.com`
 4. En vez de pedir contrasena, debe mostrar un **numero de 2 digitos**
 5. En el telefono movil, Authenticator muestra una notificacion pidiendo ese numero
 6. Introduce el numero en el telefono - la autenticacion se completa
@@ -249,9 +249,9 @@ Este proceso **siempre** resuelve los problemas de passwordless:
 
 | Elemento | Valor | Verificado |
 |---|---|---|
-| Application (client) ID | `678488cf-7a78-4487-bb96-76f479a4967a` | [x] |
-| Directory (tenant) ID | `909c0d8a-dd01-4fe7-ac8a-f336e540fdfa` | [x] |
-| Redirect URI | `msauth://com.autologin.app/TDPWfC9supht4%2Fc0hKDPvlzj%2BO8%3D` | [x] |
+| Application (client) ID | `<ENTRA_CLIENT_ID>` | [x] |
+| Directory (tenant) ID | `<ENTRA_TENANT_ID>` | [x] |
+| Redirect URI | `msauth://com.autologin.app/<SIGNATURE_HASH_URLENCODED>` | [x] |
 | Allow public client flows | Yes | [x] |
 | Plataforma Android configurada | Si | [x] |
 | Permisos: openid | Granted | [x] |
@@ -273,8 +273,8 @@ Con toda la configuracion completa, estos son los valores para el archivo `auth_
 
 ```json
 {
-  "client_id": "678488cf-7a78-4487-bb96-76f479a4967a",
-  "redirect_uri": "msauth://com.autologin.app/TDPWfC9supht4%2Fc0hKDPvlzj%2BO8%3D",
+  "client_id": "<ENTRA_CLIENT_ID>",
+  "redirect_uri": "msauth://com.autologin.app/<SIGNATURE_HASH_URLENCODED>",
   "broker_redirect_uri_registered": true,
   "authorization_user_agent": "DEFAULT",
   "account_mode": "SINGLE",
@@ -284,7 +284,7 @@ Con toda la configuracion completa, estos son los valores para el archivo `auth_
       "type": "AAD",
       "audience": {
         "type": "AzureADMyOrg",
-        "tenant_id": "909c0d8a-dd01-4fe7-ac8a-f336e540fdfa"
+        "tenant_id": "<ENTRA_TENANT_ID>"
       },
       "default": true
     }
@@ -302,7 +302,7 @@ Y en `AndroidManifest.xml`, el `android:path` del BrowserTabActivity usa el hash
         <category android:name="android.intent.category.BROWSABLE" />
         <data
             android:host="com.autologin.app"
-            android:path="/TDPWfC9supht4/c0hKDPvlzj+O8="
+            android:path="/<SIGNATURE_HASH_RAW>"
             android:scheme="msauth" />
     </intent-filter>
 </activity>
@@ -317,7 +317,7 @@ Guia paso a paso para configurar una nueva pantalla Samsung WAF Interactive Disp
 ### Prerequisitos
 
 - Acceso a Google Play Store en la pantalla (GMS habilitado)
-- Cuenta `adminprestige@prestige-expo.com` con rol "Administrador de dispositivos en la nube"
+- Cuenta `cloud-device-admin@example.com` con rol "Administrador de dispositivos en la nube"
 - APK de AutoLogin disponible (sideload o Play Store privado)
 - Authenticator passwordless ya configurado para la cuenta compartida (ver Paso 8)
 
@@ -333,7 +333,7 @@ Guia paso a paso para configurar una nueva pantalla Samsung WAF Interactive Disp
 
 1. Abre **Microsoft Authenticator** en la pantalla
 2. En la **primera pantalla** (antes de agregar ninguna cuenta), busca la opcion **"Registrar como dispositivo compartido"**
-3. Inicia sesion con la cuenta de Cloud Device Administrator: `adminprestige@prestige-expo.com`
+3. Inicia sesion con la cuenta de Cloud Device Administrator: `cloud-device-admin@example.com`
 4. Espera a que se complete el registro
 5. El dispositivo queda registrado como dispositivo compartido y recibe un Device ID
 
@@ -361,7 +361,7 @@ Guia paso a paso para configurar una nueva pantalla Samsung WAF Interactive Disp
 
 1. Abre **AutoLogin**
 2. Pulsa **"Iniciar Sesion"**
-3. Autenticate con la cuenta compartida (`pantallas@prestige-expo.com`)
+3. Autenticate con la cuenta compartida (`shared-screen-account@example.com`)
 4. En el telefono movil aparece un numero en pantalla - introducelo en Authenticator del movil
 5. Verifica que SSO funciona:
    - Abre **M365 Copilot** - debe iniciar sesion automaticamente

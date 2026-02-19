@@ -94,8 +94,8 @@ App Android empresarial que centraliza la autenticacion Microsoft 365 en pantall
 ### Prerequisitos (configuracion unica, ya realizada)
 
 **En Microsoft Entra ID:**
-- App Registration "AutoLogin" con Client ID: `678488cf-7a78-4487-bb96-76f479a4967a`
-- Tenant ID: `909c0d8a-dd01-4fe7-ac8a-f336e540fdfa`
+- App Registration "AutoLogin" con Client ID: `<ENTRA_CLIENT_ID>`
+- Tenant ID: `<ENTRA_TENANT_ID>`
 - Plataforma Android configurada con signature hash
 - Permisos: openid, profile, offline_access, User.Read (con admin consent)
 - Security Defaults **desactivados**
@@ -103,8 +103,8 @@ App Android empresarial que centraliza la autenticacion Microsoft 365 en pantall
 - OTP habilitado en Microsoft Authenticator
 - Sin Conditional Access policies de compliance
 - Sin App Protection Policies (MAM) para dispositivos compartidos
-- Cuenta admin: `adminprestige@prestige-expo.com` con rol "Administrador de dispositivos en la nube"
-- Cuenta compartida: `pantallas@prestige-expo.com` con licencia M365 Business Premium
+- Cuenta admin: `cloud-device-admin@example.com` con rol "Administrador de dispositivos en la nube"
+- Cuenta compartida: `shared-screen-account@example.com` con licencia M365 Business Premium
 
 **Passwordless configurado** para la cuenta compartida (ver guia detallada en [docs/ENTRA_ID_CONFIGURATION.md](docs/ENTRA_ID_CONFIGURATION.md)):
 - Authenticator instalado en un telefono movil con la cuenta como "Cuenta profesional" (icono maletin)
@@ -116,12 +116,12 @@ App Android empresarial que centraliza la autenticacion Microsoft 365 en pantall
 1. Instalar **Microsoft Authenticator** desde Google Play
 2. Instalar **Company Portal** desde Google Play (OBLIGATORIO - SDM no funciona sin ambas apps)
 3. Abrir Authenticator > en la **primera pantalla** (antes de agregar cuentas) seleccionar **"Registrar como dispositivo compartido"**
-4. Autenticarse con `adminprestige@prestige-expo.com` (Cloud Device Administrator)
+4. Autenticarse con `cloud-device-admin@example.com` (Cloud Device Administrator)
 5. Esperar a que se complete el registro (el dispositivo recibe un Device ID)
 6. Instalar **AutoLogin** (APK via sideload)
 7. Instalar **Microsoft 365 Copilot**, **Microsoft Teams**, **Microsoft Edge** desde Google Play
 8. Opcional: instalar Word, Excel, OneDrive, PowerPoint (solo SSO parcial)
-9. Verificar: Abrir AutoLogin > Iniciar Sesion > `pantallas@prestige-expo.com` > numero aparece en pantalla > aprobarlo en Authenticator del movil
+9. Verificar: Abrir AutoLogin > Iniciar Sesion > `shared-screen-account@example.com` > numero aparece en pantalla > aprobarlo en Authenticator del movil
 10. Verificar SSO: abrir Teams, M365 Copilot, Edge - deben iniciar sesion automaticamente
 
 > **CRITICO**: La opcion "Registrar como dispositivo compartido" SOLO aparece antes de agregar cualquier cuenta. Si no aparece, desinstalar y reinstalar Authenticator. Company Portal debe estar instalado previamente.
@@ -132,7 +132,7 @@ App Android empresarial que centraliza la autenticacion Microsoft 365 en pantall
 
 Las pantallas compartidas usan autenticacion sin contrasena con number matching:
 
-1. El usuario introduce el email `pantallas@prestige-expo.com` en la pantalla
+1. El usuario introduce el email `shared-screen-account@example.com` en la pantalla
 2. La pantalla muestra un numero de 2 digitos
 3. Authenticator en el telefono movil muestra una notificacion
 4. El usuario introduce el numero en Authenticator del movil
@@ -161,7 +161,7 @@ Las pantallas compartidas usan autenticacion sin contrasena con number matching:
 
 ### En el tenant Microsoft
 - Microsoft 365 Business Premium (o superior)
-- App registrada en Microsoft Entra ID (Client ID: `678488cf-7a78-4487-bb96-76f479a4967a`)
+- App registrada en Microsoft Entra ID (Client ID: `<ENTRA_CLIENT_ID>`)
 - Security Defaults desactivados
 - Authenticator passwordless habilitado en modo "Sin contrasena"
 - Sin App Protection Policies (MAM) aplicadas a dispositivos compartidos

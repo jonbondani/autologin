@@ -173,8 +173,8 @@ interface HistoryRepository {
 ### res/raw/auth_config.json
 ```json
 {
-  "client_id": "678488cf-7a78-4487-bb96-76f479a4967a",
-  "redirect_uri": "msauth://com.autologin.app/TDPWfC9supht4%2Fc0hKDPvlzj%2BO8%3D",
+  "client_id": "<ENTRA_CLIENT_ID>",
+  "redirect_uri": "msauth://com.autologin.app/<SIGNATURE_HASH_URLENCODED>",
   "broker_redirect_uri_registered": true,
   "authorization_user_agent": "DEFAULT",
   "account_mode": "SINGLE",
@@ -184,7 +184,7 @@ interface HistoryRepository {
       "type": "AAD",
       "audience": {
         "type": "AzureADMyOrg",
-        "tenant_id": "909c0d8a-dd01-4fe7-ac8a-f336e540fdfa"
+        "tenant_id": "<ENTRA_TENANT_ID>"
       },
       "default": true
     }
@@ -211,7 +211,7 @@ interface HistoryRepository {
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
                     android:host="com.autologin.app"
-                    android:path="/TDPWfC9supht4/c0hKDPvlzj+O8="
+                    android:path="/<SIGNATURE_HASH_RAW>"
                     android:scheme="msauth" />
             </intent-filter>
         </activity>
@@ -373,7 +373,7 @@ Otras apps Microsoft -> pierden SSO -> requeriran re-auth
 
 ## Autenticacion Passwordless
 
-La cuenta compartida (`pantallas@prestige-expo.com`) utiliza autenticacion passwordless con Microsoft Authenticator number matching:
+La cuenta compartida (`shared-screen-account@example.com`) utiliza autenticacion passwordless con Microsoft Authenticator number matching:
 
 1. El usuario introduce el email en la pantalla Samsung WAF
 2. Microsoft envia una notificacion push a la app Authenticator en un telefono movil registrado
