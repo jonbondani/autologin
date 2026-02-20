@@ -1,8 +1,8 @@
 # Progreso del Proyecto - AutoLogin
 
-## Estado General: SPRINT 6 EN CURSO - APP EN PRODUCCION
+## Estado General: SPRINT 6 EN CURSO - SPRINTS 7-9 PLANIFICADOS
 
-Ultima actualizacion: 2026-02-17
+Ultima actualizacion: 2026-02-19
 
 ---
 
@@ -162,11 +162,62 @@ Ultima actualizacion: 2026-02-17
 |---|---|---|---|
 | Signing config release | COMPLETADO | 2026-02-16 | keystore.properties (gitignored) |
 | Hash de release en Entra ID | PENDIENTE | - | Necesario para APK release |
-| Build APK release | PENDIENTE | - | |
+| Build APK release | PENDIENTE | - | APK: AutoLogin-v1.0.XX-release.apk |
 | Proguard/R8 rules | COMPLETADO | 2026-02-16 | MSAL + Room rules |
 | Versionado auto desde git | COMPLETADO | 2026-02-17 | versionCode=commits, versionName=1.0.N |
 | Envio de logs a IT | COMPLETADO | 2026-02-17 | Boton en footer, via Intent.ACTION_SEND |
-| Distribuir a displays | PENDIENTE | - | Via sideload (APK) |
+| Auto-update via GitHub Releases | COMPLETADO | 2026-02-19 | Comprueba al abrir, descarga con progreso, lanza instalador |
+| Guia de instalacion | COMPLETADO | 2026-02-19 | docs/INSTALLATION.md |
+| Distribuir a displays | PENDIENTE | - | Via sideload (APK) - ver docs/INSTALLATION.md |
+
+---
+
+## Sprint 7: Hardening de Seguridad (PLANIFICADO)
+**Estado**: PENDIENTE (depende de Sprint 6)
+
+Audit de seguridad realizado el 2026-02-19. Hallazgos:
+- 3 CRITICAL (inherentes a MSAL Android, mitigables)
+- 4 HIGH (BD sin cifrar, backup no controlado, componentes exportados)
+- 8 MEDIUM (network config, APK sin verificar, PII en logs, ProGuard, dependencias)
+
+| Tarea | Estado | Notas |
+|---|---|---|
+| Network security config | PENDIENTE | Bloquear cleartext, solo HTTPS |
+| Cifrar Room DB con SQLCipher | PENDIENTE | Emails y timestamps en texto plano |
+| Eliminar PII de logs | PENDIENTE | Emails expuestos en logcat |
+| Verificar firma del APK descargado | PENDIENTE | Supply chain attack vector |
+| Fijar versiones de dependencias | PENDIENTE | MSAL usa wildcard "8.+" |
+| Mejorar reglas ProGuard | PENDIENTE | Rules demasiado amplias |
+| Controlar backup (dataExtractionRules) | PENDIENTE | Android 12+ |
+| Reemplazar Runtime.exec() | PENDIENTE | Usar ProcessBuilder |
+
+---
+
+## Sprint 8: Telemetria y Servidor de Monitorizacion (PLANIFICADO)
+**Estado**: PENDIENTE (depende de Sprint 7)
+
+| Tarea | Estado | Notas |
+|---|---|---|
+| Esquema BD PostgreSQL | PENDIENTE | devices, events, app_status, updates |
+| API REST backend | PENDIENTE | Node.js o Go, endpoints heartbeat/events/devices |
+| docker-compose.yml | PENDIENTE | PostgreSQL + API + Grafana |
+| SDK telemetria en app Android | PENDIENTE | HeartbeatWorker + EventReporter, sin deps extra |
+| Dashboards Grafana | PENDIENTE | Estado, timeline, errores, actualizaciones |
+| Documentacion servidor | PENDIENTE | docs/MONITORING_SERVER.md |
+
+---
+
+## Sprint 9: Gestion Remota de Pantallas (PLANIFICADO)
+**Estado**: PENDIENTE (depende de Sprint 8)
+
+| Tarea | Estado | Notas |
+|---|---|---|
+| Endpoints comandos remotos | PENDIENTE | force_update, force_logout, restart_app |
+| Actualizacion remota push | PENDIENTE | Deploy desde dashboard a pantallas |
+| Cliente polling en app Android | PENDIENTE | WorkManager cada 2 min, pull-based |
+| Panel administracion IT | PENDIENTE | Grafana o web custom |
+| Alertas automaticas | PENDIENTE | Offline, errores, version desactualizada |
+| Documentacion operativa | PENDIENTE | docs/REMOTE_MANAGEMENT.md |
 
 ---
 
@@ -216,6 +267,10 @@ Ultima actualizacion: 2026-02-17
 | 2026-02-17 | Versionado automatico desde git commits | Identificacion inequivoca de builds en dispositivos |
 | 2026-02-17 | Envio de logs via Intent.ACTION_SEND | No requiere permisos extra, captura logs del proceso (incluyendo MSAL) |
 | 2026-02-17 | pm clear no disponible desde la app | Requiere CLEAR_APP_USER_DATA (solo device owner). Cloud DPC es el device owner |
+| 2026-02-19 | Auto-update via GitHub Releases API | Sin dependencias extra (HttpURLConnection + org.json). Tag format: v{versionCode} |
+| 2026-02-19 | APK renombrado a AutoLogin-v1.0.XX-release.apk | Nombre empresarial en vez de app-release.apk |
+| 2026-02-19 | Telemetria pull-based (no Firebase) | Samsung WAF no tiene GCM. Polling cada 2-5 min en red local es aceptable |
+| 2026-02-19 | Stack de monitorizacion: Docker + PostgreSQL + Grafana | Desplegable en cualquier maquina de la red local con Docker |
 
 ## Blockers Actuales
 

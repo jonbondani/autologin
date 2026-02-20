@@ -10,6 +10,7 @@ App Android empresarial que centraliza la autenticacion Microsoft 365 en pantall
 4. La pantalla principal muestra las apps en dos columnas: **acceso automatico** y **requiere identificacion**, cada una con un boton para abrirla directamente
 5. Al pulsar **Logout**, se ejecuta un **global sign-out** que revoca el PRT, cierra sesion en todas las apps y mata sus procesos en background
 6. El usuario puede enviar un **log de errores** al equipo de IT directamente desde la app
+7. La app **comprueba automaticamente** si hay una version nueva en GitHub Releases y muestra un boton de actualizacion en el footer
 
 ## Compatibilidad SSO
 
@@ -31,20 +32,20 @@ App Android empresarial que centraliza la autenticacion Microsoft 365 en pantall
 ## Arquitectura
 
 ```
-+-------------------------------+
-|         AutoLogin App          |
-|  +-------+ +--------+ +-----+ |
-|  | Login | | Logout | | Log | |
-|  +---+---+ +---+----+ +--+--+ |
-|      |         |         |     |
-|      +----+----+         |     |
-|           |              |     |
-|     +-----v-----+  +----v---+ |
-|     |   MSAL    |  |  Room  | |
-|     |  signIn() |  |   DB   | |
-|     | signOut() |  +--------+ |
-|     +-----+-----+             |
-+-----------|--------------------+
++-------------------------------------------+
+|              AutoLogin App                 |
+|  +-------+ +--------+ +-----+ +--------+ |
+|  | Login | | Logout | | Log | | Update | |
+|  +---+---+ +---+----+ +--+--+ +---+----+ |
+|      |         |         |         |       |
+|      +----+----+         |    +----v-----+ |
+|           |              |    |  GitHub  | |
+|     +-----v-----+  +----v-+  | Releases | |
+|     |   MSAL    |  | Room |  +----------+ |
+|     |  signIn() |  |  DB  |               |
+|     | signOut() |  +------+               |
+|     +-----+-----+                         |
++-----------|--------------------------------+
             |
     +-------v--------+
     |  Broker (PRT)  |
@@ -74,6 +75,7 @@ App Android empresarial que centraliza la autenticacion Microsoft 365 en pantall
 | Autenticacion | MSAL Android v8.x (Shared Device Mode) |
 | Base de datos local | Room |
 | Inyeccion de dependencias | Hilt |
+| Actualizaciones | Auto-update via GitHub Releases API |
 | Arquitectura | MVVM + Clean Architecture |
 | Min SDK | 24 (Android 7.0) |
 | Target SDK | 35 |
@@ -200,6 +202,8 @@ Las pantallas compartidas usan autenticacion sin contrasena con number matching:
 | [Progreso](docs/PROGRESS.md) | Estado actual del proyecto y decisiones |
 | [Lecciones Aprendidas](docs/LESSONS_LEARNED.md) | 27 lecciones aprendidas durante el desarrollo |
 | [Skills](docs/SKILLS.md) | Competencias tecnicas: SDM, passwordless, Samsung WAF |
+| [Instalacion](docs/INSTALLATION.md) | Guia de instalacion inicial, sideload, auto-update y publicacion de releases |
+| [Release Checklist](docs/RELEASE_CHECKLIST.md) | Checklist completo para cada release |
 | [PR Template](docs/PR.md) | Template de Pull Request con estado actual |
 | ~~[Configuracion Intune](docs/INTUNE_CONFIGURATION.md)~~ | **OBSOLETO** - Samsung WAF no soporta Intune enrollment |
 
@@ -220,10 +224,16 @@ autologin/
 |   |   |   +-- ui/              # Compose screens
 |   |   +-- res/
 |   |   |   +-- raw/
-|   |   |       +-- auth_config.json  # MSAL config
+|   |   |   |   +-- auth_config.json  # MSAL config
+|   |   |   +-- xml/
+|   |   |       +-- file_paths.xml    # FileProvider para APK updates
 |   |   +-- AndroidManifest.xml
 |   +-- build.gradle.kts
 +-- docs/
+|   +-- INSTALLATION.md    # Guia de instalacion y sideload
+|   +-- RELEASE_CHECKLIST.md
+|   +-- MANUAL_USUARIO.md
+|   +-- ...
 +-- build.gradle.kts
 +-- settings.gradle.kts
 +-- README.md
@@ -235,6 +245,17 @@ La version se genera automaticamente a partir de los commits de git:
 - **versionCode**: numero total de commits
 - **versionName**: `1.0.<commits>` (ej: `1.0.14`)
 - **Build info**: hash corto del commit visible en la app
+- **APK nombre**: `AutoLogin-v1.0.XX-release.apk`
+
+## Actualizaciones
+
+La app comprueba automaticamente si hay una version nueva en GitHub Releases al abrirse:
+1. Consulta `https://api.github.com/repos/jonbondani/autologin/releases/latest`
+2. Compara el tag (`v<versionCode>`) con el `versionCode` local
+3. Si hay version nueva, muestra boton "Actualizar a v1.0.XX" en el footer
+4. Al pulsar, descarga el APK con progreso visual y lanza el instalador de Android
+
+Para publicar una nueva version, ver [docs/INSTALLATION.md](docs/INSTALLATION.md).
 
 ## Licencia
 

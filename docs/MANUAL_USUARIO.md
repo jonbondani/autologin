@@ -64,6 +64,20 @@ Si algo no funciona correctamente:
 
 ---
 
+## Actualizar la app
+
+Si hay una version nueva disponible, veras un boton azul en la parte inferior de la pantalla:
+
+1. Pulsa **"Actualizar a v1.0.XX"**
+2. Se descargara la nueva version (veras una barra de progreso con el porcentaje)
+3. Al terminar, aparecera el instalador de Android
+4. Pulsa **"Instalar"** para confirmar
+5. La app se reiniciara con la nueva version
+
+> Si no ves el boton de actualizar, significa que ya tienes la ultima version.
+
+---
+
 ## Preguntas frecuentes
 
 **La app dice que falta Microsoft Authenticator**
@@ -77,6 +91,9 @@ Si algo no funciona correctamente:
 
 **Una app pide contrasena**
 > Esto no deberia ocurrir. Cierra sesion en AutoLogin, vuelve a iniciar sesion e intentalo de nuevo. Si persiste, envia un log de errores a IT.
+
+**La actualizacion falla o no se descarga**
+> Comprueba que la pantalla tiene conexion a internet. Si el problema persiste, pide al equipo de IT que instale la nueva version manualmente.
 
 ---
 

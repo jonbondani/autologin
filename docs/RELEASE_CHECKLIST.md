@@ -16,7 +16,7 @@
 
 - [ ] Ejecutar `./gradlew test`
 - [ ] Ejecutar `./gradlew assembleRelease`
-- [ ] Verificar que se genera APK release firmado
+- [ ] Verificar que se genera `AutoLogin-v1.0.XX-release.apk`
 - [ ] Validar `versionCode` y `versionName` esperados
 
 ## 4. QA en dispositivo piloto (Samsung WAF)
@@ -27,11 +27,12 @@
 - [ ] Verificar SSO parcial esperado: Word/Excel/OneDrive/PowerPoint/SharePoint/To Do
 - [ ] Verificar logout global y limpieza de procesos
 - [ ] Verificar boton de envio de logs a IT
+- [ ] Verificar auto-update: crear release en GitHub con versionCode superior, abrir app, debe mostrar boton de actualizacion
 
 ## 5. Despliegue
 
 - [ ] Definir ventana de despliegue y orden de pantallas
-- [ ] Distribuir APK por sideload
+- [ ] Distribuir APK por sideload (ver `docs/INSTALLATION.md`)
 - [ ] Confirmar version instalada en cada display
 - [ ] Registrar incidencias por pantalla
 

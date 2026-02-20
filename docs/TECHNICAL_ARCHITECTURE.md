@@ -43,11 +43,13 @@ App MVVM con Clean Architecture, autenticacion via MSAL broker en **Shared Devic
 |               Data Layer                    |
 |  MsalAuthRepository <- MSAL Android SDK     |
 |  RoomHistoryRepository <- Room Database      |
+|  GithubUpdateRepository <- GitHub API       |
 |  AppDetector <- PackageManager              |
 +---------------------------------------------+
 |              External                        |
 |  MSAL Broker (Authenticator/Company Portal) |
 |  Microsoft Entra ID                         |
+|  GitHub Releases API (auto-update)          |
 +---------------------------------------------+
 ```
 
@@ -198,6 +200,7 @@ interface HistoryRepository {
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
         android:name=".AutoLoginApplication"
@@ -483,6 +486,81 @@ class AppDetector(private val packageManager: PackageManager) {
 - versionCode y versionName generados automaticamente desde el numero de commits git
 - Hash corto del commit visible en el footer de la app
 - BuildConfig fields: GIT_HASH, BUILD_NUMBER
+- APK output: `AutoLogin-v1.0.XX-release.apk`
+
+---
+
+## Auto-Update via GitHub Releases
+
+La app comprueba automaticamente si hay una version nueva al abrirse.
+
+### Flujo
+```
+App se abre
+    |
+    v
+AuthViewModel.init() -> checkForUpdate() [Dispatchers.IO]
+    |
+    v
+GithubUpdateRepository.checkForUpdate()
+    |
+    v
+GET https://api.github.com/repos/jonbondani/autologin/releases/latest
+    |
+    v
+Parsea tag_name (v<versionCode>), body (release notes), assets[0].browser_download_url
+    |
+    v
+Compara versionCode remoto > BuildConfig.VERSION_CODE
+    |
+    v
+Si hay update -> UpdateState.Available(AppUpdate)
+    |
+    v
+UI muestra boton "Actualizar a v1.0.XX" en AppFooter
+    |
+    v
+Usuario pulsa -> downloadApk() con progreso -> UpdateState.Downloading(progress)
+    |
+    v
+Descarga completa -> UpdateState.ReadyToInstall(file)
+    |
+    v
+LaunchedEffect detecta ReadyToInstall -> installUpdate(context)
+    |
+    v
+FileProvider genera URI -> Intent ACTION_VIEW con application/vnd.android.package-archive
+    |
+    v
+Android Package Installer -> usuario confirma -> app se actualiza
+```
+
+### Modelo de datos
+```kotlin
+data class AppUpdate(
+    val versionName: String,    // "AutoLogin v1.0.25"
+    val versionCode: Int,       // 25
+    val downloadUrl: String,    // URL del asset APK
+    val releaseNotes: String,   // Body del release
+)
+
+sealed class UpdateState {
+    data object NoUpdate : UpdateState()
+    data class Available(val update: AppUpdate) : UpdateState()
+    data class Downloading(val progress: Int) : UpdateState()
+    data class ReadyToInstall(val file: File) : UpdateState()
+    data class Error(val message: String) : UpdateState()
+}
+```
+
+### Convencion para GitHub Releases
+- Tag: `v<versionCode>` (ej: `v25`)
+- Asset: APK adjunto (cualquier nombre)
+- Body: notas de la version
+
+### Dependencias
+- Ninguna nueva. Usa `java.net.HttpURLConnection` + `org.json.JSONObject` (ambos incluidos en Android SDK)
+- FileProvider de `androidx.core` (ya en el proyecto)
 
 ---
 
