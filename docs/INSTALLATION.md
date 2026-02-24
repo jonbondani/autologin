@@ -30,13 +30,17 @@ Para que el cierre de sesion funcione de forma global (cerrando la sesion en Tea
 
 ### Pasos
 
-1. Abrir **Microsoft Authenticator** en la pantalla Samsung WAF
-2. Ir a **Configuracion** (icono de engranaje)
-3. Pulsar **"Registro de dispositivos"** (Device Registration)
-4. Seleccionar **"Registrar como dispositivo compartido"** (Register as shared device)
-5. Iniciar sesion con una cuenta que tenga rol **Cloud Device Administrator** en Azure AD
-6. Esperar a que el registro se complete (puede tardar unos minutos)
-7. Verificar que Authenticator muestra **"Shared Device Mode: Enabled"**
+**IMPORTANTE**: Authenticator debe configurarse desde una instalacion limpia. Si ya tiene cuentas añadidas, la opcion de Shared Device Mode no aparece.
+
+1. **Desinstalar** Microsoft Authenticator de la pantalla (si ya estaba instalado)
+2. **Reinstalar** Microsoft Authenticator desde cero
+3. Al abrir Authenticator por primera vez, pulsar **"Omitir este paso"** (Skip) — NO iniciar sesion ni agregar cuenta
+4. Una vez en la pantalla principal de Authenticator, ir a **Configuracion** (icono de engranaje o menu de tres puntos)
+5. Pulsar **"Registro de dispositivos"** (Device Registration)
+6. Seleccionar **"Registrar como dispositivo compartido"** (Register as shared device)
+7. Iniciar sesion con la cuenta **Cloud Device Administrator** (ej: `administrador365@tudominio.com`)
+8. Esperar a que el registro se complete (puede tardar unos minutos)
+9. Verificar que Authenticator muestra **"Shared Device Mode: Enabled"**
 
 ### Verificacion desde AutoLogin
 

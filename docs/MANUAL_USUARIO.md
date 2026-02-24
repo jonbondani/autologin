@@ -95,7 +95,7 @@ Si hay una version nueva disponible, veras un boton azul en la parte inferior de
 > Esto no deberia ocurrir. Cierra sesion en AutoLogin, vuelve a iniciar sesion e intentalo de nuevo. Si persiste, envia un log de errores a IT.
 
 **Cierro sesion pero Teams/Edge siguen con mi cuenta**
-> La pantalla necesita estar configurada en "modo dispositivo compartido". Contacta con el equipo de IT para que registren la pantalla como dispositivo compartido en Microsoft Authenticator.
+> La pantalla necesita estar configurada en "modo dispositivo compartido". El equipo de IT debe: (1) desinstalar Microsoft Authenticator, (2) reinstalarlo, (3) pulsar "Omitir" en la pantalla inicial, (4) ir a Configuracion → Registro de dispositivos y registrar como dispositivo compartido con la cuenta de administrador. Ver la [Guia de Instalacion](INSTALLATION.md) para los pasos completos.
 
 **La actualizacion falla o no se descarga**
 > Comprueba que la pantalla tiene conexion a internet. Si el problema persiste, pide al equipo de IT que instale la nueva version manualmente.
