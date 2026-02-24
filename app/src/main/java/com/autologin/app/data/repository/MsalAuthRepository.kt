@@ -2,6 +2,7 @@ package com.autologin.app.data.repository
 
 import android.app.Activity
 import android.content.Context
+import com.autologin.app.BuildConfig
 import com.autologin.app.R
 import com.autologin.app.domain.model.AccountInfo
 import com.autologin.app.domain.model.AuthState
@@ -51,7 +52,7 @@ class MsalAuthRepository @Inject constructor(
                         }
 
                         override fun onError(exception: MsalException) {
-                            Log.e("AutoLogin", "MSAL init error: ${exception.message}", exception)
+                            logDebug("MSAL init error: ${exception.message}")
                             continuation.resume(null)
                         }
                     },
@@ -60,13 +61,19 @@ class MsalAuthRepository @Inject constructor(
 
             if (app != null) {
                 msalApp = app
-                Log.d("AutoLogin", "MSAL OK. Shared device: ${app.isSharedDevice}")
+                logDebug("MSAL init OK")
+                logDebug("  isSharedDevice = ${app.isSharedDevice}")
+                logDebug("  app class = ${app.javaClass.simpleName}")
+                if (!app.isSharedDevice) {
+                    logDebug("  WARNING: Device NOT in Shared Device Mode. Sign-out will be local only.")
+                    logDebug("  To fix: Register device as shared in Microsoft Authenticator / Intune.")
+                }
                 loadExistingAccount()
             } else {
                 _authState.value = AuthState.Error("No se pudo inicializar MSAL")
             }
         } catch (e: Exception) {
-            Log.e("AutoLogin", "MSAL init exception: ${e.message}", e)
+            logDebug("MSAL init exception: ${e.message}")
             initError = e.message
             _authState.value = AuthState.Error("MSAL exception: ${e.message}")
         }
@@ -78,14 +85,14 @@ class MsalAuthRepository @Inject constructor(
             val account = withContext(Dispatchers.IO) {
                 app.currentAccount?.currentAccount
             }
-            Log.d("AutoLogin", "loadExistingAccount: account=${account?.username}")
+            logDebug("loadExistingAccount: hasAccount=${account != null}")
             if (account != null) {
                 _authState.value = AuthState.Authenticated(account.toAccountInfo())
             } else {
                 _authState.value = AuthState.Unauthenticated
             }
         } catch (e: Exception) {
-            Log.e("AutoLogin", "loadExistingAccount error: ${e.message}", e)
+            logDebug("loadExistingAccount error: ${e.message}")
             _authState.value = AuthState.Unauthenticated
         }
     }
@@ -96,17 +103,19 @@ class MsalAuthRepository @Inject constructor(
             return Result.failure(Exception("MSAL no inicializado"))
         }
 
+        logDebug("signIn() called. isSharedDevice=${app.isSharedDevice}")
+
         // Si ya hay cuenta, mostrarla directamente
         try {
             val existing = withContext(Dispatchers.IO) { app.currentAccount?.currentAccount }
             if (existing != null) {
                 val info = existing.toAccountInfo()
-                Log.d("AutoLogin", "Cuenta ya existente: ${info.email}")
+                logDebug("signIn: Existing account found, reusing session")
                 _authState.value = AuthState.Authenticated(info)
                 return Result.success(info)
             }
         } catch (e: Exception) {
-            Log.e("AutoLogin", "Error checking existing account: ${e.message}")
+            logDebug("signIn: Error checking existing account: ${e.message}")
         }
 
         _authState.value = AuthState.Loading
@@ -118,19 +127,20 @@ class MsalAuthRepository @Inject constructor(
                 .withCallback(object : AuthenticationCallback {
                     override fun onSuccess(result: IAuthenticationResult) {
                         val info = result.account.toAccountInfo()
-                        Log.d("AutoLogin", "Global sign-in OK: ${info.email}, shared: ${app.isSharedDevice}")
+                        logDebug("signIn: SUCCESS. shared=${app.isSharedDevice}, tenantId=${result.tenantId}")
                         _authState.value = AuthState.Authenticated(info)
                         continuation.resume(Result.success(info))
                     }
 
                     override fun onError(exception: MsalException) {
-                        Log.e("AutoLogin", "Sign-in error: ${exception.message}", exception)
+                        logDebug("signIn: ERROR: ${exception.errorCode} - ${exception.message}")
                         val msg = exception.message ?: "Error de autenticacion"
                         _authState.value = AuthState.Error(msg)
                         continuation.resume(Result.failure(exception))
                     }
 
                     override fun onCancel() {
+                        logDebug("signIn: CANCELLED by user")
                         _authState.value = AuthState.Unauthenticated
                         continuation.resume(Result.failure(Exception("Login cancelado por el usuario")))
                     }
@@ -143,16 +153,41 @@ class MsalAuthRepository @Inject constructor(
 
     override suspend fun signOut(): Result<Unit> {
         val app = msalApp ?: return Result.failure(Exception("MSAL no inicializado"))
+
+        // Pre-signout diagnostics
+        logDebug("signOut() called")
+        logDebug("  isSharedDevice = ${app.isSharedDevice}")
+        try {
+            val preAccount = withContext(Dispatchers.IO) { app.currentAccount?.currentAccount }
+            logDebug("  pre-signOut account = ${if (preAccount != null) "present (${preAccount.username})" else "null"}")
+        } catch (e: Exception) {
+            logDebug("  pre-signOut account check failed: ${e.message}")
+        }
+
+        if (!app.isSharedDevice) {
+            logDebug("  WARNING: NOT shared device mode. signOut() will only clear local MSAL cache.")
+            logDebug("  Other apps (Teams, Edge, etc.) will keep their sessions via broker PRT.")
+            logDebug("  To fix: Register device as shared in Microsoft Authenticator.")
+        }
+
         _authState.value = AuthState.Loading
 
         return suspendCancellableCoroutine { continuation ->
             app.signOut(object : ISingleAccountPublicClientApplication.SignOutCallback {
                 override fun onSignOut() {
+                    logDebug("signOut: SUCCESS callback received")
+                    try {
+                        val postAccount = app.currentAccount?.currentAccount
+                        logDebug("  post-signOut account = ${if (postAccount != null) "STILL PRESENT — local cache NOT cleared" else "null (local cache cleared OK)"}")
+                    } catch (e: Exception) {
+                        logDebug("  post-signOut account check failed: ${e.message}")
+                    }
                     _authState.value = AuthState.Unauthenticated
                     continuation.resume(Result.success(Unit))
                 }
 
                 override fun onError(exception: MsalException) {
+                    logDebug("signOut: ERROR: ${exception.errorCode} - ${exception.message}")
                     val msg = exception.message ?: "Error al cerrar sesion"
                     _authState.value = AuthState.Error(msg)
                     continuation.resume(Result.failure(exception))
@@ -175,5 +210,12 @@ class MsalAuthRepository @Inject constructor(
             name = claims?.get("name")?.toString() ?: username ?: "",
             email = username ?: "",
         )
+    }
+
+    /** Log only in debug builds to avoid PII leaks in production logcat. */
+    private fun logDebug(message: String) {
+        if (BuildConfig.DEBUG) {
+            Log.d("AutoLogin", message)
+        }
     }
 }

@@ -22,6 +22,46 @@ O por terminal:
 ./gradlew assembleRelease
 ```
 
+## Configurar Shared Device Mode (obligatorio)
+
+Para que el cierre de sesion funcione de forma global (cerrando la sesion en Teams, Edge y todas las apps de Microsoft), la pantalla debe estar registrada como **dispositivo compartido** en Azure AD.
+
+**Sin este paso, el cierre de sesion solo elimina la cuenta local de AutoLogin, pero las demas apps mantienen la sesion activa.**
+
+### Pasos
+
+1. Abrir **Microsoft Authenticator** en la pantalla Samsung WAF
+2. Ir a **Configuracion** (icono de engranaje)
+3. Pulsar **"Registro de dispositivos"** (Device Registration)
+4. Seleccionar **"Registrar como dispositivo compartido"** (Register as shared device)
+5. Iniciar sesion con una cuenta que tenga rol **Cloud Device Administrator** en Azure AD
+6. Esperar a que el registro se complete (puede tardar unos minutos)
+7. Verificar que Authenticator muestra **"Shared Device Mode: Enabled"**
+
+### Verificacion desde AutoLogin
+
+Al abrir AutoLogin despues de registrar el dispositivo, los logs de depuracion (`adb logcat -s AutoLogin`) deben mostrar:
+
+```
+AutoLogin: MSAL init OK
+AutoLogin:   isSharedDevice = true
+```
+
+Si muestra `isSharedDevice = false`, el dispositivo no esta correctamente registrado. Revisar:
+
+- Que Microsoft Authenticator este actualizado a la ultima version
+- Que la cuenta usada para registrar tenga el rol **Cloud Device Administrator**
+- Que el dispositivo tenga conexion a internet durante el registro
+- Reiniciar la pantalla tras el registro
+
+### Requisitos en Azure AD (Entra ID)
+
+- La cuenta de registro necesita el rol **Cloud Device Administrator** o **Global Administrator**
+- El tenant debe tener habilitado el registro de dispositivos compartidos
+- El `client_id` de la app (`678488cf-7a78-4487-bb96-76f479a4967a`) debe estar registrado en Entra ID con el permiso `User.Read`
+
+---
+
 ## Instalacion inicial (primera vez)
 
 ### Opcion A: ADB por red (recomendado para IT)
@@ -90,3 +130,5 @@ gh release create v$(git rev-list --count HEAD) \
 | "Instalar apps desconocidas" bloqueado | Ajustes → Apps → Permisos especiales → Instalar apps desconocidas → activar para la fuente |
 | ADB no conecta | Verificar que la pantalla y el PC estan en la misma red, y que la depuracion por red esta activa |
 | Login falla | Verificar que Microsoft Authenticator esta instalado y que el hash del APK esta registrado en Entra ID |
+| Cerrar sesion no cierra Teams/Edge | El dispositivo no esta en Shared Device Mode. Seguir la seccion "Configurar Shared Device Mode" de esta guia |
+| `isSharedDevice = false` en logs | Microsoft Authenticator no tiene el dispositivo registrado como compartido. Registrarlo con una cuenta Cloud Device Administrator |

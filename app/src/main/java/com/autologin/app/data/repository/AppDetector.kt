@@ -4,6 +4,7 @@ import android.app.ActivityManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.util.Log
+import com.autologin.app.BuildConfig
 import com.autologin.app.domain.model.DetectedApp
 import com.autologin.app.domain.model.SsoType
 import javax.inject.Inject
@@ -71,9 +72,9 @@ class AppDetector @Inject constructor(
     fun killApp(packageName: String) {
         try {
             activityManager.killBackgroundProcesses(packageName)
-            Log.d("AutoLogin", "Killed background process: $packageName")
+            if (BuildConfig.DEBUG) Log.d("AutoLogin", "Killed background process: $packageName")
         } catch (e: Exception) {
-            Log.w("AutoLogin", "Could not kill $packageName: ${e.message}")
+            if (BuildConfig.DEBUG) Log.w("AutoLogin", "Could not kill $packageName: ${e.message}")
         }
     }
 

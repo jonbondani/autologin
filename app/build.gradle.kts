@@ -103,7 +103,7 @@ android {
 
 dependencies {
     // MSAL
-    implementation("com.microsoft.identity.client:msal:8.+")
+    implementation("com.microsoft.identity.client:msal:8.0.2")
 
     // Compose
     implementation(platform("androidx.compose:compose-bom:2024.12.01"))
@@ -114,10 +114,12 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.8.5")
     debugImplementation("androidx.compose.ui:ui-tooling")
 
-    // Room
+    // Room + SQLCipher
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
+    implementation("net.zetetic:android-database-sqlcipher:4.5.4")
+    implementation("androidx.sqlite:sqlite-ktx:2.4.0")
 
     // Hilt
     implementation("com.google.dagger:hilt-android:2.51.1")

@@ -44,6 +44,8 @@ Una vez iniciada la sesion, la pantalla principal muestra las apps en dos grupos
 
 > **Importante**: Cierra siempre la sesion al terminar de usar la pantalla.
 
+> **Nota para IT**: Para que el cierre de sesion sea global (cerrando tambien Teams, Edge, etc.), la pantalla debe estar registrada como **dispositivo compartido** en Microsoft Authenticator. Si al cerrar sesion las demas apps siguen con la cuenta activa, consultar la seccion "Configurar Shared Device Mode" en la [Guia de Instalacion](INSTALLATION.md).
+
 ---
 
 ## Enviar un informe de errores
@@ -91,6 +93,9 @@ Si hay una version nueva disponible, veras un boton azul en la parte inferior de
 
 **Una app pide contrasena**
 > Esto no deberia ocurrir. Cierra sesion en AutoLogin, vuelve a iniciar sesion e intentalo de nuevo. Si persiste, envia un log de errores a IT.
+
+**Cierro sesion pero Teams/Edge siguen con mi cuenta**
+> La pantalla necesita estar configurada en "modo dispositivo compartido". Contacta con el equipo de IT para que registren la pantalla como dispositivo compartido en Microsoft Authenticator.
 
 **La actualizacion falla o no se descarga**
 > Comprueba que la pantalla tiene conexion a internet. Si el problema persiste, pide al equipo de IT que instale la nueva version manualmente.

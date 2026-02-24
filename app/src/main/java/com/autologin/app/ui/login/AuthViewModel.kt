@@ -3,9 +3,11 @@ package com.autologin.app.ui.login
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.autologin.app.BuildConfig
 import com.autologin.app.data.repository.AppDetector
 import com.autologin.app.data.repository.MsalAuthRepository
 import com.autologin.app.domain.model.AppUpdate
@@ -76,10 +78,29 @@ class AuthViewModel @Inject constructor(
 
     fun signOut() {
         viewModelScope.launch(Dispatchers.IO) {
+            logDebug("ViewModel.signOut() started")
+            logDebug("  isSharedDevice = ${authRepository.isSharedDevice}")
             val account = authRepository.getAccount()
-            authRepository.signOut()
+            logDebug("  current account = ${account?.email ?: "null"}")
+
+            val result = authRepository.signOut()
+            logDebug("  signOut result = ${if (result.isSuccess) "SUCCESS" else "FAILURE: ${result.exceptionOrNull()?.message}"}")
+
             account?.let { historyRepository.recordLogout(it.email, it.name) }
+
+            logDebug("  killing Microsoft apps...")
             appDetector.killMicrosoftApps()
+            logDebug("  signOut flow complete")
+
+            // Post-signout: check if account is truly gone
+            val postAccount = authRepository.getAccount()
+            logDebug("  post-signOut account = ${postAccount?.email ?: "null (OK)"}")
+        }
+    }
+
+    private fun logDebug(message: String) {
+        if (BuildConfig.DEBUG) {
+            Log.d("AutoLogin", message)
         }
     }
 
@@ -102,6 +123,11 @@ class AuthViewModel @Inject constructor(
                 _updateState.value = UpdateState.Downloading(0)
                 val file = updateRepository.downloadApk(url) { progress ->
                     _updateState.value = UpdateState.Downloading(progress)
+                }
+                if (!updateRepository.verifyApkSignature(file)) {
+                    file.delete()
+                    _updateState.value = UpdateState.Error("La firma del APK no coincide. Actualizacion rechazada.")
+                    return@launch
                 }
                 _updateState.value = UpdateState.ReadyToInstall(file)
             } catch (e: Exception) {

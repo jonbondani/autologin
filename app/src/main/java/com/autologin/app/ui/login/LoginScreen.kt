@@ -485,10 +485,12 @@ private fun AppFooter(updateState: UpdateState = UpdateState.NoUpdate, onUpdate:
         TextButton(
             onClick = {
                 val log = try {
-                    val process = Runtime.getRuntime().exec(
-                        arrayOf("logcat", "-d", "-t", "1000", "--pid=${android.os.Process.myPid()}")
-                    )
-                    process.inputStream.bufferedReader().readText()
+                    val process = ProcessBuilder(
+                        "logcat", "-d", "-t", "1000", "--pid=${android.os.Process.myPid()}"
+                    ).redirectErrorStream(true).start()
+                    val raw = process.inputStream.bufferedReader().readText()
+                    // Redact emails from log output
+                    raw.replace(Regex("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}"), "[email]")
                 } catch (e: Exception) {
                     "Error al recopilar logs: ${e.message}"
                 }

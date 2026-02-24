@@ -1,6 +1,10 @@
 package com.autologin.app.data.repository
 
 import android.content.Context
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
+import android.content.pm.Signature
+import android.os.Build
 import com.autologin.app.BuildConfig
 import com.autologin.app.domain.model.AppUpdate
 import com.autologin.app.domain.repository.UpdateRepository
@@ -10,6 +14,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
+import java.security.MessageDigest
 import javax.inject.Inject
 
 class GithubUpdateRepository @Inject constructor(
@@ -91,5 +96,59 @@ class GithubUpdateRepository @Inject constructor(
         } finally {
             connection.disconnect()
         }
+    }
+
+    override fun verifyApkSignature(apkFile: File): Boolean {
+        return try {
+            val downloadedSigs = getApkSignatures(apkFile.absolutePath) ?: return false
+            val installedSigs = getInstalledSignatures() ?: return false
+
+            if (downloadedSigs.isEmpty() || installedSigs.isEmpty()) return false
+
+            // Compare SHA-256 of first signing certificate
+            val downloadedHash = sha256(downloadedSigs.first().toByteArray())
+            val installedHash = sha256(installedSigs.first().toByteArray())
+            downloadedHash.contentEquals(installedHash)
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun getApkSignatures(apkPath: String): Array<Signature>? {
+        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            PackageManager.GET_SIGNING_CERTIFICATES
+        } else {
+            PackageManager.GET_SIGNATURES
+        }
+        val info: PackageInfo = context.packageManager
+            .getPackageArchiveInfo(apkPath, flags) ?: return null
+
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            info.signingInfo?.apkContentsSigners
+        } else {
+            info.signatures
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun getInstalledSignatures(): Array<Signature>? {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val info = context.packageManager.getPackageInfo(
+                context.packageName,
+                PackageManager.GET_SIGNING_CERTIFICATES,
+            )
+            info.signingInfo?.apkContentsSigners
+        } else {
+            val info = context.packageManager.getPackageInfo(
+                context.packageName,
+                PackageManager.GET_SIGNATURES,
+            )
+            info.signatures
+        }
+    }
+
+    private fun sha256(bytes: ByteArray): ByteArray {
+        return MessageDigest.getInstance("SHA-256").digest(bytes)
     }
 }

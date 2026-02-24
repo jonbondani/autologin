@@ -6,4 +6,5 @@ import java.io.File
 interface UpdateRepository {
     suspend fun checkForUpdate(): AppUpdate?
     suspend fun downloadApk(url: String, onProgress: (Int) -> Unit): File
+    fun verifyApkSignature(apkFile: File): Boolean
 }

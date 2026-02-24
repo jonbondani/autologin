@@ -1,5 +1,8 @@
-# MSAL
--keep class com.microsoft.identity.** { *; }
+# MSAL - keep only public API and required internals
+-keep public class com.microsoft.identity.client.** {
+    public *;
+}
+-keep class com.microsoft.identity.common.** { *; }
 -keep class com.microsoft.aad.** { *; }
 -dontwarn com.microsoft.identity.**
 -dontwarn com.microsoft.aad.**
@@ -9,6 +12,7 @@
 # Room
 -keep class * extends androidx.room.RoomDatabase
 -keep @androidx.room.Entity class *
+-keep class com.autologin.app.data.local.AuthEvent { *; }
 
 # Hilt
 -keep class dagger.hilt.** { *; }
@@ -17,5 +21,6 @@
 # Coroutines
 -dontwarn kotlinx.coroutines.**
 
-# Keep data classes used by Room
--keep class com.autologin.app.data.local.AuthEvent { *; }
+# SQLCipher
+-keep class net.sqlcipher.** { *; }
+-dontwarn net.sqlcipher.**

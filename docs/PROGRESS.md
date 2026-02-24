@@ -1,8 +1,8 @@
 # Progreso del Proyecto - AutoLogin
 
-## Estado General: SPRINT 6 EN CURSO - SPRINTS 7-9 PLANIFICADOS
+## Estado General: SPRINT 7 EN CURSO - HARDENING DE SEGURIDAD
 
-Ultima actualizacion: 2026-02-19
+Ultima actualizacion: 2026-02-20
 
 ---
 
@@ -156,24 +156,25 @@ Ultima actualizacion: 2026-02-19
 ---
 
 ## Sprint 6: Release y Distribucion
-**Estado**: EN CURSO
+**Estado**: COMPLETADO (2026-02-20)
 
 | Tarea | Estado | Fecha | Notas |
 |---|---|---|---|
 | Signing config release | COMPLETADO | 2026-02-16 | keystore.properties (gitignored) |
-| Hash de release en Entra ID | PENDIENTE | - | Necesario para APK release |
-| Build APK release | PENDIENTE | - | APK: AutoLogin-v1.0.XX-release.apk |
+| Hash de release en Entra ID | COMPLETADO | 2026-02-20 | Registrado en App Registration |
+| Build APK release | COMPLETADO | 2026-02-20 | AutoLogin-v1.0.21-release.apk |
 | Proguard/R8 rules | COMPLETADO | 2026-02-16 | MSAL + Room rules |
 | Versionado auto desde git | COMPLETADO | 2026-02-17 | versionCode=commits, versionName=1.0.N |
 | Envio de logs a IT | COMPLETADO | 2026-02-17 | Boton en footer, via Intent.ACTION_SEND |
 | Auto-update via GitHub Releases | COMPLETADO | 2026-02-19 | Comprueba al abrir, descarga con progreso, lanza instalador |
 | Guia de instalacion | COMPLETADO | 2026-02-19 | docs/INSTALLATION.md |
-| Distribuir a displays | PENDIENTE | - | Via sideload (APK) - ver docs/INSTALLATION.md |
+| Distribuir a pantalla piloto | COMPLETADO | 2026-02-20 | Via ADB sideload, QA post-instalacion OK |
+| Release en GitHub | COMPLETADO | 2026-02-20 | v21 publicado con APK |
 
 ---
 
-## Sprint 7: Hardening de Seguridad (PLANIFICADO)
-**Estado**: PENDIENTE (depende de Sprint 6)
+## Sprint 7: Hardening de Seguridad
+**Estado**: EN CURSO
 
 Audit de seguridad realizado el 2026-02-19. Hallazgos:
 - 3 CRITICAL (inherentes a MSAL Android, mitigables)
